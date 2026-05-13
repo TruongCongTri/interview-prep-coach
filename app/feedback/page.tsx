@@ -66,11 +66,49 @@ function FeedbackContent() {
 
       {/* --- NAVIGATION DOCK --- */}
       <div className="fixed bottom-10 left-1/2 z-[100] -translate-x-1/2">
-        <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex items-center gap-4 rounded-full border border-white/10 bg-zinc-950/80 p-2 pl-6 backdrop-blur-2xl shadow-2xl">
-          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Turn {activeTurnIndex} <span className="text-zinc-800">/ {sessionConversation.length}</span></span>
+        <motion.div 
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/80 p-2 backdrop-blur-2xl shadow-2xl"
+        >
+          <button 
+            onClick={() => scrollToSection(Math.max(0, activeTurnIndex - 1))}
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5 transition-colors"
+          >
+            <ChevronUp className="h-4 w-4 text-zinc-500" />
+          </button>
+          
+          <div className="flex items-center gap-1.5 px-2">
+            {/* Nav Dots */}
+            <button 
+               onClick={() => scrollToSection(0)}
+               className={`h-2 w-2 rounded-full transition-all ${activeTurnIndex === 0 ? theme.bg : 'bg-zinc-700'}`}
+            />
+            {data.mockConversation.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => scrollToSection(i + 1)}
+                className={`h-2 w-2 rounded-full transition-all ${activeTurnIndex === i + 1 ? theme.bg : 'bg-zinc-700'}`}
+              />
+            ))}
+            <button 
+               onClick={() => scrollToSection(data.mockConversation.length + 1)}
+               className={`h-2 w-2 rounded-full transition-all ${activeTurnIndex === data.mockConversation.length + 1 ? theme.bg : 'bg-zinc-700'}`}
+            />
+          </div>
+
           <div className="h-4 w-px bg-white/10 mx-2" />
-          <button onClick={() => scrollToSection(Math.max(0, activeTurnIndex - 1))} className="p-2 hover:text-white transition-colors"><ChevronUp className="h-4 w-4 text-zinc-600" /></button>
-          <button onClick={() => scrollToSection(Math.min(sessionConversation.length + 1, activeTurnIndex + 1))} className="p-2 hover:text-white transition-colors"><ChevronDown className="h-4 w-4 text-zinc-600" /></button>
+          
+          <span className="px-3 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+             Turn {activeTurnIndex} <span className="text-zinc-600">/ {data.mockConversation.length}</span>
+          </span>
+
+          <button 
+            onClick={() => scrollToSection(Math.min(data.mockConversation.length + 1, activeTurnIndex + 1))}
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5 transition-colors"
+          >
+            <ChevronDown className="h-4 w-4 text-zinc-500" />
+          </button>
         </motion.div>
       </div>
 
