@@ -84,7 +84,9 @@ function SetupContent() {
     setter: (v: string) => void,
   ) => {
     setter(value);
-    updateUrl({ [key]: value });
+    const params = new URLSearchParams(searchParams.toString());
+    params.set(key, value);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const toggleSkill = (skill: string) => {
@@ -96,6 +98,22 @@ function SetupContent() {
 
   const themeColor = setupMode === "role" ? "cyan" : "amber";
   const activeEntries = INTERVIEW_DATA.filter((i) => i.type === setupMode);
+
+  const handleInitialize = () => {
+    const params = new URLSearchParams();
+    params.set("slug", selectedEntry.slug);
+    params.set("mode", setupMode);
+    params.set("lv", seniority);
+
+    // Send either duration or question count based on mode
+    if (setupMode === "role") {
+      params.set("dur", duration);
+    } else {
+      params.set("q", questionCount);
+    }
+
+    router.push(`/interview?${params.toString()}`);
+  };
 
   return (
     <main className="min-h-screen bg-black text-white selection:bg-cyan-500/30 pb-24">
@@ -306,9 +324,7 @@ function SetupContent() {
                 </div>
               </div>
               <button
-                onClick={() =>
-                  router.push(`/interview?slug=${selectedEntry.slug}`)
-                }
+                onClick={handleInitialize}
                 className={`w-full rounded-full py-4 text-xs font-black uppercase tracking-widest text-black transition-all hover:scale-[1.02] active:scale-95 bg-${themeColor}-500 shadow-[0_0_30px_rgba(0,0,0,0.5)]`}
               >
                 Initialize AI Engine

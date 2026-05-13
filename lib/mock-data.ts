@@ -1,21 +1,25 @@
 export type EntryType = "role" | "topic";
 
+export interface IdealSTAR {
+  s: string;
+  t: string;
+  a: string;
+  r: string;
+}
+
 export interface QuestionDetail {
   id: string;
   question: string;
   suggestion: string;
-  idealSTAR: {
-    s: string;
-    t: string;
-    a: string;
-    r: string;
-  };
+  idealSTAR: IdealSTAR
 }
 
 export interface ConversationTurn {
   id: string;
   aiQuestion: string;
   userMockAnswer: string;
+  idealSTAR: IdealSTAR; // Added benchmark
+  suggestion: string;   // Added coach's suggestion
   feedback: {
     overallScore: number;
     strengths: string[];
@@ -61,11 +65,46 @@ export const INTERVIEW_DATA: InterviewEntry[] = [
       { id: "ed-10", question: "Describe a successful collaboration with an external partner.", suggestion: "Focus on industry or community partnerships.", idealSTAR: { s: "Lack of internship opportunities for seniors.", t: "Secure 5 local corporate partners.", a: "Pitched our curriculum value to local tech firms.", r: "Secured 8 recurring internship placements." }}
     ],
     mockConversation: [
-      { id: "mt-1", aiQuestion: "What is your philosophy on modern curriculum design?", userMockAnswer: "I believe it should be student-centered and flexible to adapt to changing standards.", feedback: { overallScore: 70, strengths: ["Modern approach", "Clarity"], weaknesses: ["Needs a specific example", "Vague on 'Adaptability'"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}},
-      { id: "mt-2", aiQuestion: "How do you use data to inform your decisions?", userMockAnswer: "I look at test scores and student feedback surveys every month to find trends.", feedback: { overallScore: 85, strengths: ["Metric focused", "Continuous improvement"], weaknesses: ["Could specify the tools used"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "mt-3", aiQuestion: "Tell me about a time you had to lead a difficult team meeting.", userMockAnswer: "Last week we had to announce budget cuts. People were upset but I was transparent.", feedback: { overallScore: 75, strengths: ["Honesty", "Leadership"], weaknesses: ["Needs to quantify the outcome"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}},
-      { id: "mt-4", aiQuestion: "How do you manage multiple deadlines simultaneously?", userMockAnswer: "I use Trello and prioritize tasks based on their urgency and impact on students.", feedback: { overallScore: 90, strengths: ["Tool usage", "Strategic prioritization"], weaknesses: ["No major weaknesses"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "mt-5", aiQuestion: "Where do you see education coordination in 5 years?", userMockAnswer: "I think it will be heavily driven by AI and personalized learning paths.", feedback: { overallScore: 80, strengths: ["Forward thinking", "Tech awareness"], weaknesses: ["Be more specific about the role's change"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}}
+      {
+        id: "mt-1",
+        aiQuestion: "What is your philosophy on modern curriculum design?",
+        userMockAnswer: "I believe it should be student-centered and flexible to adapt to changing standards.",
+        suggestion: "Connect philosophy to measurable learning outcomes.",
+        idealSTAR: { s: "Outdated passive learning model.", t: "Redesign 3 core modules.", a: "Implemented project-based learning assessments.", r: "Student satisfaction scores rose by 25%." },
+        feedback: { overallScore: 70, strengths: ["Modern approach", "Clarity"], weaknesses: ["Needs a specific example"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      },
+      {
+        id: "mt-2",
+        aiQuestion: "How do you use data to inform your decisions?",
+        userMockAnswer: "I look at test scores and student feedback surveys every month to find trends.",
+        suggestion: "Mention specific analytics tools or LMS reporting features.",
+        idealSTAR: { s: "Declining math scores in Q1.", t: "Identify the root cause of the drop.", a: "Performed cohort analysis on digital homework completion.", r: "Intervention led to 15% recovery in Q2." },
+        feedback: { overallScore: 85, strengths: ["Metric focused"], weaknesses: ["Could specify tools"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "mt-3",
+        aiQuestion: "Tell me about a time you had to lead a difficult team meeting.",
+        userMockAnswer: "Last week we had to announce budget cuts. People were upset but I was transparent.",
+        suggestion: "Explain exactly how you managed the negative emotions of the faculty.",
+        idealSTAR: { s: "Emergency budget meeting.", t: "Announce 15% cuts to department supplies.", a: "Provided a transparent audit of non-essential spending.", r: "Faculty accepted the cuts without formal grievance." },
+        feedback: { overallScore: 75, strengths: ["Transparency", "Directness"], weaknesses: ["Needs more detail on mediation"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}
+      },
+      {
+        id: "mt-4",
+        aiQuestion: "How do you manage multiple deadlines simultaneously?",
+        userMockAnswer: "I use Trello and prioritize tasks based on their urgency and impact on students.",
+        suggestion: "Give an example of a time when two 'High Urgency' tasks overlapped.",
+        idealSTAR: { s: "Simultaneous accreditation audit and graduation prep.", t: "Submit 50 compliance docs while coordinating event logistics.", a: "Delegated logistic checks and focused personally on compliance data.", r: "Audit passed and graduation ran smoothly." },
+        feedback: { overallScore: 88, strengths: ["Tool usage", "Prioritization logic"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "mt-5",
+        aiQuestion: "Where do you see education coordination in 5 years?",
+        userMockAnswer: "I think it will be heavily driven by AI and personalized learning paths.",
+        suggestion: "Focus on how the human element of coordination evolves alongside AI.",
+        idealSTAR: { s: "Shift toward hybrid EdTech models.", t: "Maintain institutional standards in a digital world.", a: "Upskilled staff on AI-proctoring and adaptive learning tech.", r: "Achieved 95% faculty tech-readiness rating." },
+        feedback: { overallScore: 80, strengths: ["Future-proof mindset"], weaknesses: ["Specify the role's evolution"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      }
     ]
   },
   {
@@ -88,11 +127,46 @@ export const INTERVIEW_DATA: InterviewEntry[] = [
       { id: "3d-10", question: "How do you handle tight deadlines in a production environment?", suggestion: "Mention blocking out and prioritization.", idealSTAR: { s: "Week-long task required in 2 days.", t: "Deliver high-quality props for a vertical slice.", a: "Used kitbashing for secondary details and focused on hero areas.", r: "Delivered on time with full engine integration." }}
     ],
     mockConversation: [
-      { id: "mc-1", aiQuestion: "Which software do you prefer for sculpting and why?", userMockAnswer: "ZBrush, because its brush engine handles millions of polys better than anything else.", feedback: { overallScore: 85, strengths: ["Tool expertise", "Technical justification"], weaknesses: ["Could mention workflow integration"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}},
-      { id: "mc-2", aiQuestion: "How do you approach UV unwrapping for complex objects?", userMockAnswer: "I try to hide seams in natural crevices and keep texel density consistent across the model.", feedback: { overallScore: 90, strengths: ["Industry best practices", "Attention to detail"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "mc-3", aiQuestion: "Tell me about a project where you had to use a specific technical constraint.", userMockAnswer: "I did a mobile game once where I could only use one 512 texture for a whole car.", feedback: { overallScore: 80, strengths: ["Constraint awareness", "Real-world experience"], weaknesses: ["Needs to explain the solution better"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}},
-      { id: "mc-4", aiQuestion: "How do you handle feedback on your work?", userMockAnswer: "I take it professionally and usually ask for clear examples if I'm confused about the direction.", feedback: { overallScore: 88, strengths: ["Soft skills", "Professional maturity"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "mc-5", aiQuestion: "Why do you want to work for our studio?", userMockAnswer: "I love the art style of your last game and I think my sculpting skills fit perfectly.", feedback: { overallScore: 75, strengths: ["Enthusiasm", "Style alignment"], weaknesses: ["Be more specific about the studio's technical challenges"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}}
+      {
+        id: "mc-1",
+        aiQuestion: "Which software do you prefer for sculpting and why?",
+        userMockAnswer: "ZBrush, because its brush engine handles millions of polys better than anything else.",
+        suggestion: "Mention how you integrate ZBrush into a pipeline (e.g., GoZ to Maya).",
+        idealSTAR: { s: "Highly detailed character sculpt required.", t: "Sculpt 40 million polygons for high-poly bake.", a: "Used DynaMesh and ZRemesher for optimized workflow.", r: "Asset completed 2 days ahead of schedule." },
+        feedback: { overallScore: 88, strengths: ["Technical justification"], weaknesses: ["Missing pipeline context"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      },
+      {
+        id: "mc-2",
+        aiQuestion: "How do you approach UV unwrapping for complex objects?",
+        userMockAnswer: "I try to hide seams in natural crevices and keep texel density consistent.",
+        suggestion: "Discuss how you handle overlapping UVs or UDIMs for hero assets.",
+        idealSTAR: { s: "Hero asset with complex mechanical parts.", t: "Ensure 4k texture clarity without visible seams.", a: "Used RizomUV for automated packing and manual seam placement.", r: "Achieved perfect texel density across 4 UDIMs." },
+        feedback: { overallScore: 92, strengths: ["Industry best practices"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "mc-3",
+        aiQuestion: "Tell me about a project where you had to use a specific technical constraint.",
+        userMockAnswer: "I did a mobile game once where I could only use one 512 texture for a whole car.",
+        suggestion: "Explain the 'Trick' used (e.g., mirrored UVs) to maximize that small texture.",
+        idealSTAR: { s: "Mobile racing game memory limits.", t: "Fit high-detail car model into 512px texture space.", a: "Used mirrored UV shells and vertex coloring for detail.", r: "Visual quality matched competitors with 1k textures." },
+        feedback: { overallScore: 82, strengths: ["Constraint awareness"], weaknesses: ["Explain the technical solution better"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}
+      },
+      {
+        id: "mc-4",
+        aiQuestion: "How do you handle feedback on your work?",
+        userMockAnswer: "I take it professionally and usually ask for clear examples if I'm confused.",
+        suggestion: "Discuss a specific time feedback led to a better final asset.",
+        idealSTAR: { s: "Lead artist requested 'more grit' on a sci-fi prop.", t: "Revise textures to meet art direction.", a: "Used Substance Painter anchor points to proceduralize grime.", r: "Final asset approved and used in marketing trailer." },
+        feedback: { overallScore: 85, strengths: ["Maturity", "Communication"], weaknesses: ["Needs a specific success story"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "mc-5",
+        aiQuestion: "Why do you want to work for our studio?",
+        userMockAnswer: "I love the art style of your last game and I think my sculpting skills fit.",
+        suggestion: "Identify a specific technical challenge the studio has (e.g., open world optimization).",
+        idealSTAR: { s: "Studio's recent shift to Unreal Engine 5.", t: "Adapt high-poly workflow for Nanite.", a: "Developed a workflow to skip low-poly retopology for hero props.", r: "Proved a 30% reduction in environment asset turnaround." },
+        feedback: { overallScore: 78, strengths: ["Style alignment"], weaknesses: ["Lack of technical specificity"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      }
     ]
   },
   {
@@ -115,11 +189,46 @@ export const INTERVIEW_DATA: InterviewEntry[] = [
       { id: "sa-10", question: "How do you handle rejection?", suggestion: "Focus on the 'numbers game' and learning.", idealSTAR: { s: "Got 20 'no's' in a single afternoon.", t: "Maintain energy for the 21st call.", a: "Took a 5-minute break and refined my rebuttal script.", r: "Booked a meeting on the very next call." }}
     ],
     mockConversation: [
-      { id: "sc-1", aiQuestion: "Sell me this pen.", userMockAnswer: "How long have you been looking for a pen? This one is reliable and sleek.", feedback: { overallScore: 60, strengths: ["Started with a question"], weaknesses: ["Didn't establish a real pain point", "Too generic"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}},
-      { id: "sc-2", aiQuestion: "What is your typical discovery call structure?", userMockAnswer: "I introduce myself, ask about their problems, and then show the demo.", feedback: { overallScore: 80, strengths: ["Logical flow", "Customer centric"], weaknesses: ["Needs to mention goal setting at the start"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "sc-3", aiQuestion: "How do you handle a gatekeeper?", userMockAnswer: "I treat them like the decision maker and try to build value with them first.", feedback: { overallScore: 85, strengths: ["Respectful approach", "Strategic"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "sc-4", aiQuestion: "Tell me about a time you hit your quota.", userMockAnswer: "Last year I hit 120% of my target by expanding existing accounts.", feedback: { overallScore: 90, strengths: ["Quantifiable result", "Strategic expansion"], weaknesses: ["None"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "detected" }}},
-      { id: "sc-5", aiQuestion: "What do you do when a lead goes cold?", userMockAnswer: "I send a 'break-up' email to see if they are still interested.", feedback: { overallScore: 75, strengths: ["Proactive", "Standard practice"], weaknesses: ["Could suggest more creative follow-ups"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}}
+      {
+        id: "sac-1",
+        aiQuestion: "How do you handle a prospect who says your price is too high?",
+        userMockAnswer: "I ask them what their budget is and see if I can match it.",
+        suggestion: "Never lead with price matching. Defend value by comparing the cost of the problem vs. the price of the fix.",
+        idealSTAR: { s: "Mid-market lead stalled on a $20k quote.", t: "Close the deal without discounting.", a: "Quantified that their current manual error rate cost them $100k/year.", r: "Deal closed at full price within 48 hours." },
+        feedback: { overallScore: 55, strengths: ["Directness"], weaknesses: ["Immediate discounting", "Low value defense"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      },
+      {
+        id: "sac-2",
+        aiQuestion: "Tell me about your prospecting strategy.",
+        userMockAnswer: "I do 50 cold calls and 100 emails every single morning.",
+        suggestion: "Quality over quantity. Mention how you research a prospect before hitting 'Send'.",
+        idealSTAR: { s: "Entering a saturated market for CRM tools.", t: "Build a $500k pipeline from scratch.", a: "Used 'Hyper-personalization' based on recent news about the leads.", r: "30% meeting-book rate, highest on the team." },
+        feedback: { overallScore: 82, strengths: ["Work ethic", "Persistence"], weaknesses: ["Needs more strategic research focus"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "sac-3",
+        aiQuestion: "Describe your typical discovery call structure.",
+        userMockAnswer: "I ask about their current setup, their pain, and then I show them a demo.",
+        suggestion: "Spend 80% of discovery on the 'Impact' of the pain. The demo should only show the fix for that pain.",
+        idealSTAR: { s: "Discovery call with a skeptical CTO.", t: "Uncover a deep enough pain to justify a purchase.", a: "Used 'The Gap' technique to compare today vs. the future.", r: "CTO asked for a proposal on the first call." },
+        feedback: { overallScore: 88, strengths: ["Logical flow", "Customer centric"], weaknesses: ["Spend more time on 'Why now?'"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "sac-4",
+        aiQuestion: "How do you handle gatekeepers?",
+        userMockAnswer: "I try to be as polite as possible and ask for the manager.",
+        suggestion: "Treat the gatekeeper as a 'Coach'. Give them value so they *want* to help you.",
+        idealSTAR: { s: "Receptionist blocked all calls to the HR Director.", t: "Get the HR Director on the phone.", a: "Sent a physical coffee voucher to the receptionist with a hand-written note.", r: "Was put through to the Director the next morning." },
+        feedback: { overallScore: 75, strengths: ["Professionalism"], weaknesses: ["Needs a more creative bypass strategy"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      },
+      {
+        id: "sac-5",
+        aiQuestion: "What motivates you beyond the commission check?",
+        userMockAnswer: "I love winning and being at the top of the leaderboard.",
+        suggestion: "Good. Also mention the satisfaction of solving a business problem for a customer.",
+        idealSTAR: { s: "Slow Q4 with team morale low.", t: "Stay productive during a market dip.", a: "Gamified my personal daily activity and focused on closing smaller 'quick wins'.", r: "Finished as the #1 rep for the fiscal year." },
+        feedback: { overallScore: 90, strengths: ["Competitive spirit", "Self-starter"], weaknesses: ["None"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "detected" }}
+      }
     ]
   },
   {
@@ -142,11 +251,46 @@ export const INTERVIEW_DATA: InterviewEntry[] = [
       { id: "swe-10", question: "How do you balance speed and quality in development?", suggestion: "Discuss MVP approach and technical debt management.", idealSTAR: { s: "Tight deadline for a high-priority feature.", t: "Deliver on time without compromising core stability.", a: "Used feature flags to launch early and iterate.", r: "Launched on time; technical debt was paid off in the next sprint." }}
     ],
     mockConversation: [
-      { id: "swc-1", aiQuestion: "What is your favorite design pattern?", userMockAnswer: "I really like the Factory pattern because it makes object creation more flexible.", feedback: { overallScore: 85, strengths: ["Technical knowledge", "Clear use-case"], weaknesses: ["Could give a real project example"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}},
-      { id: "swc-2", aiQuestion: "How do you handle disagreements in code reviews?", userMockAnswer: "I focus on the code, not the person, and try to refer to style guides.", feedback: { overallScore: 90, strengths: ["Professionalism", "Objectivity"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "swc-3", aiQuestion: "Explain 'Closures' in JavaScript.", userMockAnswer: "It's when a function remembers the variables from its outer scope even after that scope is closed.", feedback: { overallScore: 95, strengths: ["Technical accuracy", "Conciseness"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "swc-4", aiQuestion: "Tell me about a time you learned a new technology quickly.", userMockAnswer: "I learned Golang in a weekend to help with a backend migration project.", feedback: { overallScore: 88, strengths: ["Adaptability", "Initiative"], weaknesses: ["Mention the outcome of the migration"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}},
-      { id: "swc-5", aiQuestion: "Why should we hire you over other developers?", userMockAnswer: "I'm passionate about clean code and I have a proven track record of delivering results.", feedback: { overallScore: 75, strengths: ["Confidence", "Value-driven"], weaknesses: ["Be more specific about this company's stack"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}}
+      {
+        id: "swc-1",
+        aiQuestion: "What is your favorite design pattern?",
+        userMockAnswer: "I really like the Factory pattern because it makes object creation more flexible.",
+        suggestion: "Give an example where you used a Factory to handle complex conditional logic.",
+        idealSTAR: { s: "Managing 15 different payment gateway integrations.", t: "Clean up messy conditional instantiation logic.", a: "Implemented a PaymentProcessorFactory.", r: "Reduced controller complexity by 60%." },
+        feedback: { overallScore: 85, strengths: ["Technical accuracy"], weaknesses: ["Needs real project example"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      },
+      {
+        id: "swc-2",
+        aiQuestion: "How do you handle disagreements in code reviews?",
+        userMockAnswer: "I focus on the code, not the person, and try to refer to style guides.",
+        suggestion: "Explain how you resolve architectural disagreements where no style guide exists.",
+        idealSTAR: { s: "Conflict over choosing Redux vs. Context.", t: "Resolve to maintain sprint velocity.", a: "Organized a 15-min spike to compare boilerplate and performance.", r: "Team agreed on Context for simplicity; finished on time." },
+        feedback: { overallScore: 90, strengths: ["Professionalism"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "swc-3",
+        aiQuestion: "Explain 'Closures' in JavaScript.",
+        userMockAnswer: "It's when a function remembers the variables from its outer scope.",
+        suggestion: "Mention a practical use case, like data privacy or memoization.",
+        idealSTAR: { s: "Need to create private counters for a library.", t: "Prevent external modification of internal state.", a: "Used a closure to wrap the state variable.", r: "Achieved secure data encapsulation." },
+        feedback: { overallScore: 95, strengths: ["Technical precision"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "swc-4",
+        aiQuestion: "Tell me about a time you learned a new technology quickly.",
+        userMockAnswer: "I learned Golang in a weekend to help with a backend migration project.",
+        suggestion: "Quantify how that fast learning impacted the project's success.",
+        idealSTAR: { s: "Critical bottleneck in microservice performance.", t: "Migrate Ruby service to Go.", a: "Studied Go concurrency and rewrote the ingestion engine.", r: "Service latency dropped by 80% within the week." },
+        feedback: { overallScore: 88, strengths: ["Initiative", "Adaptability"], weaknesses: ["Quantify the outcome"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}
+      },
+      {
+        id: "swc-5",
+        aiQuestion: "Why should we hire you over other developers?",
+        userMockAnswer: "I'm passionate about clean code and I have a proven track record.",
+        suggestion: "Speak to this specific company's mission or stack (e.g., 'Your focus on Fintech').",
+        idealSTAR: { s: "Hiring for a high-security banking API role.", t: "Ensure zero-defect deployments.", a: "Brought experience in SOC2 compliance and unit testing.", r: "Matched the exact risk-profile of the engineering team." },
+        feedback: { overallScore: 75, strengths: ["Confidence"], weaknesses: ["Lack of company specificity"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      }
     ]
   },
   {
@@ -169,11 +313,46 @@ export const INTERVIEW_DATA: InterviewEntry[] = [
       { id: "cs-10", question: "Tell me about your best customer success story.", suggestion: "Focus on transformation and long-term partnership.", idealSTAR: { s: "Client was using the tool for only 10% of its capability.", t: "Drive full adoption.", a: "Implemented a series of tailored training sessions.", r: "Client saved $1M/year using the advanced features." }}
     ],
     mockConversation: [
-      { id: "csc-1", aiQuestion: "What is the most important metric for a CSM?", userMockAnswer: "Net Revenue Retention (NRR), because it shows both churn and growth.", feedback: { overallScore: 90, strengths: ["Strategic metric", "Clear reasoning"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "csc-2", aiQuestion: "How do you prepare for a first call with a new client?", userMockAnswer: "I read their sales notes and check their website to understand their business.", feedback: { overallScore: 80, strengths: ["Preparation", "Research oriented"], weaknesses: ["Could mention setting an agenda"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "csc-3", aiQuestion: "Tell me about a time you handled a churn risk.", userMockAnswer: "A client was leaving for a competitor, so I gave them a discount to stay.", feedback: { overallScore: 65, strengths: ["Proactive"], weaknesses: ["Discounting is a short-term fix", "Should solve the value gap"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}},
-      { id: "csc-4", aiQuestion: "How do you work with the sales team?", userMockAnswer: "I give them feedback on lead quality and help with handovers.", feedback: { overallScore: 85, strengths: ["Cross-functional", "Supportive"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "csc-5", aiQuestion: "What do you like most about customer success?", userMockAnswer: "I love helping people solve problems and seeing their business grow.", feedback: { overallScore: 75, strengths: ["Empathy", "Passion"], weaknesses: ["Connect this back to company revenue goals"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}}
+      {
+        id: "csc-1",
+        aiQuestion: "How do you manage a high-value customer who is at risk of churning?",
+        userMockAnswer: "I set up a call to hear their problems and offer a discount.",
+        suggestion: "Focus on the 'Value Gap' rather than the price—discounts don't fix bad product-fit.",
+        idealSTAR: { s: "Top account stopped using the platform after a re-org.", t: "Save the $200k ARR account.", a: "Conducted a new discovery session with the new decision makers.", r: "Account renewed and expanded by 10%." },
+        feedback: { overallScore: 65, strengths: ["Proactive"], weaknesses: ["Too reliant on discounting"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}
+      },
+      {
+        id: "csc-2",
+        aiQuestion: "What is the most important metric for a CSM?",
+        userMockAnswer: "Net Revenue Retention (NRR) because it accounts for both churn and upsells.",
+        suggestion: "Also mention 'Time to Value' (TTV) as an early indicator of long-term NRR.",
+        idealSTAR: { s: "Company focus on sustainable growth.", t: "Maintain a healthy NRR above 110%.", a: "Identified low-usage accounts and ran proactive training camps.", r: "Ended the year with 120% NRR." },
+        feedback: { overallScore: 92, strengths: ["Strategic depth", "Accurate"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "csc-3",
+        aiQuestion: "How do you handle a customer who wants a feature that is not on the roadmap?",
+        userMockAnswer: "I tell them I'll check with Product, but usually it's a 'no'.",
+        suggestion: "Try to understand the 'Job to be Done'—can you solve it with a workaround?",
+        idealSTAR: { s: "Large client needed a custom HR integration.", t: "Solve the need without custom dev.", a: "Trained them on our Zapier integration to automate the sync.", r: "Client was happy and became an advocate." },
+        feedback: { overallScore: 78, strengths: ["Honesty"], weaknesses: ["Needs better problem-solving creativity"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      },
+      {
+        id: "csc-4",
+        aiQuestion: "How do you prepare for an Executive Business Review (EBR)?",
+        userMockAnswer: "I gather usage data and make a deck about how much they used us.",
+        suggestion: "Shift from 'usage' (inputs) to 'outcomes' (ROI). Executives care about money saved or made.",
+        idealSTAR: { s: "Renewal coming up for a 'silent' client.", t: "Prove value to the CFO.", a: "Analyzed $50k in cost-savings achieved through our platform.", r: "CFO signed a 3-year extension." },
+        feedback: { overallScore: 84, strengths: ["Data-driven"], weaknesses: ["Focus more on ROI, less on usage"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "csc-5",
+        aiQuestion: "Describe a time you successfully upsold a client.",
+        userMockAnswer: "Their team grew from 10 to 50, so I moved them to the Enterprise plan.",
+        suggestion: "Explain how you sold the additional *value* of Enterprise, not just the seats.",
+        idealSTAR: { s: "Client reached the limits of the Basic tier.", t: "Expand account from $5k to $25k ARR.", a: "Pitched the security and single-sign-on (SSO) value for their growing team.", r: "Successfully closed the expansion in 2 weeks." },
+        feedback: { overallScore: 80, strengths: ["Growth focused"], weaknesses: ["Needs a more strategic 'Value' pitch"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "detected" }}
+      }
     ]
   },
   {
@@ -196,11 +375,46 @@ export const INTERVIEW_DATA: InterviewEntry[] = [
       { id: "pm-10", question: "Tell me about your favorite product and why.", suggestion: "Discuss UX, business model, and the problem it solves.", idealSTAR: { s: "Analyzing why Notion is successful.", t: "Explain product market fit.", a: "Focused on their flexibility and community templates.", r: "Provided a deep, structured analysis." }}
     ],
     mockConversation: [
-      { id: "pmc-1", aiQuestion: "What is the difference between a project manager and a product manager?", userMockAnswer: "Project is about when, Product is about why and what.", feedback: { overallScore: 90, strengths: ["Clear distinction", "Accurate"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "pmc-2", aiQuestion: "How do you know when a product is finished?", userMockAnswer: "A product is never finished, but it's ready when it solves the core problem for users.", feedback: { overallScore: 85, strengths: ["Iterative mindset", "User focused"], weaknesses: ["Could mention technical stability"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "pmc-3", aiQuestion: "Tell me about a time you led a cross-functional team.", userMockAnswer: "I led design and engineering to build a new app in 3 months.", feedback: { overallScore: 75, strengths: ["Leadership", "Execution"], weaknesses: ["Explain how you handled conflicts between teams"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}},
-      { id: "pmc-4", aiQuestion: "What is your approach to technical debt?", userMockAnswer: "I try to allocate 20% of every sprint to fixing bugs and refactoring.", feedback: { overallScore: 88, strengths: ["Balanced approach", "Pragmatic"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "pmc-5", aiQuestion: "How do you handle a feature request from a major client?", userMockAnswer: "I evaluate it against our vision and see if it benefits other users too.", feedback: { overallScore: 80, strengths: ["Strategic thinking", "Vision aligned"], weaknesses: ["Mention how you communicate this back to the client"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}}
+      {
+        id: "pmc-1",
+        aiQuestion: "How do you prioritize a product backlog?",
+        userMockAnswer: "I use RICE score to weigh reach, impact, confidence, and effort.",
+        suggestion: "Discuss how you handle 'gut-feeling' requests from executives during this process.",
+        idealSTAR: { s: "Backlog had 200+ unsorted feature requests.", t: "Create a data-backed roadmap.", a: "Implemented RICE and held bi-weekly stakeholder reviews.", r: "Engineering throughput on high-impact tasks increased by 30%." },
+        feedback: { overallScore: 92, strengths: ["Framework-driven", "Logical"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "pmc-2",
+        aiQuestion: "Describe a time a product launch failed. What did you learn?",
+        userMockAnswer: "We launched a dark mode but nobody used it because we didn't market it well.",
+        suggestion: "Focus on the discovery phase—was it a marketing failure or a 'wrong problem' failure?",
+        idealSTAR: { s: "Launch of 'Smart Analytics' had zero adoption.", t: "Identify the cause of post-launch failure.", a: "Ran a loss-analysis survey and found the UI was too complex.", r: "Pivoted to a 'Simple View' which reached 60% adoption." },
+        feedback: { overallScore: 75, strengths: ["Ownership", "Honesty"], weaknesses: ["Analysis was a bit shallow"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}
+      },
+      {
+        id: "pmc-3",
+        aiQuestion: "How do you define an MVP for a new feature?",
+        userMockAnswer: "The smallest set of features that solves the core problem for the user.",
+        suggestion: "Mention the 'Minimum Lovable Product'—it should be small but also high quality.",
+        idealSTAR: { s: "Need to enter the meal-delivery market in 4 weeks.", t: "Define the core launch experience.", a: "Stripped all filters except location and price for the MVP.", r: "Launched on time with 1,000 successful orders in Week 1." },
+        feedback: { overallScore: 85, strengths: ["Correct definition", "User focus"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "pmc-4",
+        aiQuestion: "How do you handle a stakeholder who demands a feature not on the roadmap?",
+        userMockAnswer: "I show them the data and explain why other things are more important.",
+        suggestion: "Focus on the 'Yes, and...' or 'Not now, because...' technique to maintain relationships.",
+        idealSTAR: { s: "CEO requested a crypto-integration mid-sprint.", t: "Protect the team from scope creep while respecting leadership.", a: "Showed the RICE impact on our current 'Retention' goal.", r: "CEO agreed to move crypto to next year's discovery phase." },
+        feedback: { overallScore: 88, strengths: ["Data-driven", "Firm"], weaknesses: ["Could be softer on diplomacy"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "detected" }}
+      },
+      {
+        id: "pmc-5",
+        aiQuestion: "What is your approach to user research?",
+        userMockAnswer: "I look at Mixpanel data and talk to five users every week.",
+        suggestion: "Mention how you synthesize qualitative talk with quantitative data.",
+        idealSTAR: { s: "High churn on the signup page.", t: "Understand why users drop off at Step 2.", a: "Watched 50 FullStory sessions and interviewed 3 churned users.", r: "Found a bug in the 'Verify Email' button; fixing it cut churn by 15%." },
+        feedback: { overallScore: 80, strengths: ["Hands-on", "Consistent"], weaknesses: ["Be more specific about the synthesis"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      }
     ]
   },
   {
@@ -223,11 +437,46 @@ export const INTERVIEW_DATA: InterviewEntry[] = [
       { id: "sd-10", question: "How do you prevent 'Double Spending' in a payment system?", suggestion: "Discuss Idempotency keys and database transactions.", idealSTAR: { s: "Network retries causing duplicate payments.", t: "Ensure exactly-once processing.", a: "Implemented unique idempotency keys on every transaction.", r: "Duplicate charges dropped to zero." }}
     ],
     mockConversation: [
-      { id: "sdc-1", aiQuestion: "What happens when you type 'google.com' in the browser?", userMockAnswer: "DNS finds the IP, then a TCP connection is made, and the browser gets the HTML.", feedback: { overallScore: 80, strengths: ["Good overview", "Accurate"], weaknesses: ["Mention Load Balancers and CDN"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "sdc-2", aiQuestion: "How do you choose between Redis and Memcached?", userMockAnswer: "Redis if you need data types and persistence, Memcached for simple key-value.", feedback: { overallScore: 90, strengths: ["Technical accuracy", "Concise"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "sdc-3", aiQuestion: "Tell me about a time you solved a bottleneck.", userMockAnswer: "I noticed the API was slow, so I added a cache to the most used endpoint.", feedback: { overallScore: 75, strengths: ["Pragmatic"], weaknesses: ["Explain how you identified the bottleneck"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}},
-      { id: "sdc-4", aiQuestion: "What is an API Gateway?", userMockAnswer: "It's the single entry point that handles routing, auth, and rate limiting.", feedback: { overallScore: 92, strengths: ["Comprehensive definition", "Role-aware"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "sdc-5", aiQuestion: "Why is eventually consistency used in distributed systems?", userMockAnswer: "Because it's impossible to have total consistency and high availability at the same time.", feedback: { overallScore: 88, strengths: ["Theory knowledge", "Logical"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}}
+      {
+        id: "sdc-1",
+        aiQuestion: "What happens when you type 'google.com' in the browser?",
+        userMockAnswer: "DNS finds the IP, then a TCP connection is made, and the browser gets the HTML.",
+        suggestion: "Mention Load Balancers, TLS Handshake, and CDN edge caching.",
+        idealSTAR: { s: "User requesting a static asset globally.", t: "Minimize Time-to-First-Byte.", a: "DNS resolution -> CDN Edge -> Origin failover logic.", r: "Optimized delivery under 100ms." },
+        feedback: { overallScore: 80, strengths: ["Accurate flow"], weaknesses: ["Missing edge details"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "sdc-2",
+        aiQuestion: "How do you choose between Redis and Memcached?",
+        userMockAnswer: "Redis if you need data types and persistence, Memcached for simple key-value.",
+        suggestion: "Explain how Redis persistence (RDB/AOF) affects performance.",
+        idealSTAR: { s: "Need to cache a session with 10 complex fields.", t: "Choose a cache for high-frequency writes.", a: "Used Redis Hashes to avoid full string re-writes.", r: "Reduced network overhead by 40%." },
+        feedback: { overallScore: 90, strengths: ["Theory knowledge"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "sdc-3",
+        aiQuestion: "Tell me about a time you solved a bottleneck.",
+        userMockAnswer: "I noticed the API was slow, so I added a cache to the most used endpoint.",
+        suggestion: "Explain exactly how you identified the bottleneck (e.g., using Datadog).",
+        idealSTAR: { s: "P99 latency spiked to 2 seconds during peak hours.", t: "Identify the slow component.", a: "Used distributed tracing to find a missing index in the DB.", r: "Latency returned to 150ms after indexing." },
+        feedback: { overallScore: 78, strengths: ["Pragmatic approach"], weaknesses: ["Explain the investigation process"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "missing" }}
+      },
+      {
+        id: "sdc-4",
+        aiQuestion: "What is an API Gateway?",
+        userMockAnswer: "It's the single entry point that handles routing, auth, and rate limiting.",
+        suggestion: "Discuss how an API Gateway helps in a microservice circuit-breaking scenario.",
+        idealSTAR: { s: "Downstream service failing under load.", t: "Prevent cascading failures.", a: "Implemented rate-limiting at the Gateway level.", r: "Core services remained stable during traffic burst." },
+        feedback: { overallScore: 92, strengths: ["Comprehensive definition"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "sdc-5",
+        aiQuestion: "Why is eventual consistency used in distributed systems?",
+        userMockAnswer: "Because it's impossible to have total consistency and high availability at the same time.",
+        suggestion: "Refer to the CAP Theorem by name and explain the trade-offs.",
+        idealSTAR: { s: "Scaling a global social media feed.", t: "Handle high write-volume.", a: "Accepted eventual consistency in the feed for 100% availability.", r: "System handled 1M updates/sec without downtime." },
+        feedback: { overallScore: 88, strengths: ["Conceptual understanding"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      }
     ]
   },
   {
@@ -250,11 +499,46 @@ export const INTERVIEW_DATA: InterviewEntry[] = [
       { id: "rh-10", question: "Explain the 'stale closure' problem with hooks.", suggestion: "Discuss how hooks capture variables from the render scope.", idealSTAR: { s: "Counter was not updating correctly in a timeout.", t: "Ensure the latest state is accessed.", a: "Used the functional update pattern (prev => prev + 1).", r: "Correct counter behavior." }}
     ],
     mockConversation: [
-      { id: "rhc-1", aiQuestion: "Why can't hooks be called inside loops?", userMockAnswer: "Because React relies on the call order to keep track of state.", feedback: { overallScore: 95, strengths: ["Accurate", "Understands React internals"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "rhc-2", aiQuestion: "Tell me about a custom hook you built.", userMockAnswer: "I built useLocalStorage to sync state with the browser's storage.", feedback: { overallScore: 90, strengths: ["Practical example", "Useful"], weaknesses: ["None"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "detected" }}},
-      { id: "rhc-3", aiQuestion: "How do you avoid unnecessary re-renders?", userMockAnswer: "I use React.memo on my leaf components.", feedback: { overallScore: 80, strengths: ["Correct technique"], weaknesses: ["Explain why React.memo isn't always the solution"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "rhc-4", aiQuestion: "What happens if you leave the dependency array empty in useEffect?", userMockAnswer: "It only runs once when the component mounts.", feedback: { overallScore: 92, strengths: ["Fundamental knowledge"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "rhc-5", aiQuestion: "How do you test your custom hooks?", userMockAnswer: "I use @testing-library/react-hooks to render them in a test harness.", feedback: { overallScore: 88, strengths: ["Modern tooling", "Quality focus"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}}
+      {
+        id: "rhc-1",
+        aiQuestion: "Why can't hooks be called inside loops or conditions?",
+        userMockAnswer: "Because React relies on the call order to keep track of state.",
+        suggestion: "Explain that React uses an internal array of 'memory cells' based on execution order.",
+        idealSTAR: { s: "Inconsistent state updates in a dynamic list.", t: "Fix a bug where the wrong state was returned.", a: "Audited hook placement and enforced the 'Top Level' rule.", r: "Eliminated hook order violations across the app." },
+        feedback: { overallScore: 95, strengths: ["Internals awareness", "Accurate"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "rhc-2",
+        aiQuestion: "Tell me about a custom hook you built.",
+        userMockAnswer: "I built useLocalStorage to sync state with the browser's storage.",
+        suggestion: "Discuss how you handled server-side rendering (SSR) compatibility in that hook.",
+        idealSTAR: { s: "Form data loss on page refresh.", t: "Persist draft state locally.", a: "Extracted logic into useLocalStorage with a generic type.", r: "User retention for multi-step forms increased by 40%." },
+        feedback: { overallScore: 90, strengths: ["Abstraction skill", "Practical"], weaknesses: ["None"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "detected" }}
+      },
+      {
+        id: "rhc-3",
+        aiQuestion: "When would you prefer useMemo over just calculating a value in-line?",
+        userMockAnswer: "When I have a really expensive calculation that shouldn't run every render.",
+        suggestion: "Mention that useMemo is also critical for maintaining referential integrity for child components.",
+        idealSTAR: { s: "Laggy UI when filtering 5,000 table rows.", t: "Optimize computation time.", a: "Wrapped the filter logic in useMemo with proper dependencies.", r: "Filter latency dropped from 150ms to 5ms." },
+        feedback: { overallScore: 82, strengths: ["Performance awareness"], weaknesses: ["Missing referential integrity context"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "rhc-4",
+        aiQuestion: "How do you handle stale closures in useEffect?",
+        userMockAnswer: "I use the functional update pattern for my state setters.",
+        suggestion: "Also mention the use of the 'latest' ref pattern if functional updates aren't enough.",
+        idealSTAR: { s: "Counter was lagging behind in a setInterval callback.", t: "Ensure current state is accessed in the closure.", a: "Used setCount(prev => prev + 1) instead of setCount(count + 1).", r: "Reliable real-time updates for the timer." },
+        feedback: { overallScore: 88, strengths: ["Correct fix", "Technical clarity"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "rhc-5",
+        aiQuestion: "What is the primary difference between useEffect and useLayoutEffect?",
+        userMockAnswer: "useLayoutEffect runs before the screen paints, useAfterEffect runs after.",
+        suggestion: "Give a specific example of when useLayoutEffect is necessary (e.g., measuring DOM nodes).",
+        idealSTAR: { s: "Modal was jumping slightly after appearing.", t: "Prevent visual flickering on mount.", a: "Switched measurement logic to useLayoutEffect.", r: "Seamless, flicker-free modal positioning." },
+        feedback: { overallScore: 78, strengths: ["Timing awareness"], weaknesses: ["Needs concrete use-case example"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      }
     ]
   },
   {
@@ -277,11 +561,46 @@ export const INTERVIEW_DATA: InterviewEntry[] = [
       { id: "bh-10", question: "How do you handle feedback you disagree with?", suggestion: "Focus on active listening and asking for clarification.", idealSTAR: { s: "Told my code was 'too complex' in a review.", t: "Understand the reviewer's perspective.", a: "Asked for a specific refactoring example.", r: "Realized they were right and simplified the logic." }}
     ],
     mockConversation: [
-      { id: "bhc-1", aiQuestion: "Why should we hire you?", userMockAnswer: "I'm a hard worker and I really like this company.", feedback: { overallScore: 50, strengths: ["Enthusiasm"], weaknesses: ["Way too generic", "Give me a specific skill match"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}},
-      { id: "bhc-2", aiQuestion: "What is your biggest weakness?", userMockAnswer: "I used to be bad at public speaking, so I joined Toastmasters.", feedback: { overallScore: 85, strengths: ["Action oriented", "Real weakness"], weaknesses: ["Explain how it helps you now"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "detected" }}},
-      { id: "bhc-3", aiQuestion: "Where do you see yourself in 5 years?", userMockAnswer: "I hope to be a Lead Developer here helping younger devs.", feedback: { overallScore: 80, strengths: ["Ambitious", "Loyal"], weaknesses: ["Connect it to the company's future"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}},
-      { id: "bhc-4", aiQuestion: "Tell me about your teamwork style.", userMockAnswer: "I like to collaborate and make sure everyone's voice is heard.", feedback: { overallScore: 75, strengths: ["Inclusive"], weaknesses: ["Give an example of a team project"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}},
-      { id: "bhc-5", aiQuestion: "What makes you a good leader?", userMockAnswer: "I lead by example and I'm always available to help my team.", feedback: { overallScore: 82, strengths: ["Supportive", "Accessible"], weaknesses: ["Mention strategic leadership"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}}
+      {
+        id: "bhc-1",
+        aiQuestion: "Why should we hire you?",
+        userMockAnswer: "I'm a hard worker and I really like this company.",
+        suggestion: "Align your specific past results with this company's current goals.",
+        idealSTAR: { s: "Company looking for a proactive growth engineer.", t: "Fill a gap in account management efficiency.", a: "Automated the lead-vetting process at my last role.", r: "Saved 20 hours of manual work per week." },
+        feedback: { overallScore: 50, strengths: ["Enthusiasm"], weaknesses: ["Too generic", "Lack of evidence"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      },
+      {
+        id: "bhc-2",
+        aiQuestion: "What is your biggest weakness?",
+        userMockAnswer: "I used to be bad at public speaking, so I joined Toastmasters.",
+        suggestion: "Explain how overcoming this weakness has improved your current work.",
+        idealSTAR: { s: "Fear of presenting to senior stakeholders.", t: "Present a complex roadmap to the CEO.", a: "Practiced via Toastmasters and internal lunch-and-learns.", r: "CEO approved the roadmap with no friction." },
+        feedback: { overallScore: 85, strengths: ["Growth mindset", "Action-oriented"], weaknesses: ["Connect back to current value"], starAnalysis: { s: "detected", t: "detected", a: "detected", r: "detected" }}
+      },
+      {
+        id: "bhc-3",
+        aiQuestion: "Where do you see yourself in 5 years?",
+        userMockAnswer: "I hope to be a Lead Developer here helping younger devs.",
+        suggestion: "Be more specific about the impact you want to have on the company's tech stack.",
+        idealSTAR: { s: "Growing junior talent pool in the company.", t: "Elevate the engineering culture.", a: "Mentored 3 juniors to mid-level in 12 months.", r: "Became the go-to lead for the Core API team." },
+        feedback: { overallScore: 80, strengths: ["Ambition", "Loyalty"], weaknesses: ["None"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      },
+      {
+        id: "bhc-4",
+        aiQuestion: "Tell me about your teamwork style.",
+        userMockAnswer: "I like to collaborate and make sure everyone's voice is heard.",
+        suggestion: "Give an example of a time your collaborative style resolved a team block.",
+        idealSTAR: { s: "Design and Dev teams were misaligned on a feature.", t: "Bring both teams to a consensus.", a: "Facilitated a co-creation workshop to sync requirements.", r: "Feature launched on time with 0 design-to-dev debt." },
+        feedback: { overallScore: 75, strengths: ["Inclusive"], weaknesses: ["Needs a specific example"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "missing" }}
+      },
+      {
+        id: "bhc-5",
+        aiQuestion: "What makes you a good leader?",
+        userMockAnswer: "I lead by example and I'm always available to help my team.",
+        suggestion: "Describe how you handle a low-performing team member.",
+        idealSTAR: { s: "Direct report was missing performance targets.", t: "Improve their output to meet team goals.", a: "Created a 4-week PIP focusing on pair programming.", r: "Employee returned to 100% capacity and stayed with the firm." },
+        feedback: { overallScore: 82, strengths: ["Empathy", "Accessibility"], weaknesses: ["Mention strategic leadership"], starAnalysis: { s: "missing", t: "missing", a: "detected", r: "detected" }}
+      }
     ]
   }
 ];
