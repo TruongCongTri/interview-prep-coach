@@ -16,17 +16,14 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 bg-background">
-      <h2 className="text-headline-md text-foreground mb-4">System Error</h2>
-      <p className="text-body-inter text-muted-foreground max-w-md mb-8">
-        An unexpected error occurred. The technical team has been notified and
-        is working to resolve it.
-      </p>
-      <button
-        onClick={() => reset()}
-        className="bg-foreground text-background px-6 py-3 rounded-md text-body-inter font-semibold hover:bg-muted-foreground transition-colors"
-      >
-        Try again
+    <div className="flex h-screen flex-col items-center justify-center bg-black text-center">
+      <div className="mb-8 h-20 w-20 rounded-full border border-white/10 flex items-center justify-center">
+         <span className="text-2xl font-black text-zinc-800">!</span>
+      </div>
+      <h2 className="text-2xl font-bold tracking-tighter">System Error.</h2>
+      <p className="mt-2 text-zinc-500">A global exception has occurred.</p>
+      <button  onClick={() => reset()} className="mt-8 text-xs font-black uppercase tracking-widest text-white underline underline-offset-8">
+        Hard Reset
       </button>
     </div>
   );

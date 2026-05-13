@@ -1,13 +1,14 @@
-// Root Template: Fade-in animation for redirecting between pages
+"use client";
+import { motion } from "framer-motion";
 
-export default function RootTemplate({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Template({ children }: { children: React.ReactNode }) {
   return (
-    <div className="animate-in fade-in duration-500 ease-in-out w-full h-full flex-1 flex flex-col">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
