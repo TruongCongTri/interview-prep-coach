@@ -13,7 +13,6 @@ import {
   Layers,
 } from "lucide-react";
 
-// Import centralized data
 import { INTERVIEW_DATA, EntryType } from "@/lib/mock-data";
 
 function SetupContent() {
@@ -21,7 +20,6 @@ function SetupContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // --- 1. INITIALIZE STATE FROM URL (Single Source of Truth) ---
   const slugParam = searchParams.get("slug");
   const modeParam = (searchParams.get("mode") as EntryType) || "role";
 
@@ -34,7 +32,6 @@ function SetupContent() {
     initialEntry.skills,
   );
 
-  // Settings
   const [seniority, setSeniority] = useState(
     searchParams.get("lv") || "Mid-Level",
   );
@@ -47,7 +44,6 @@ function SetupContent() {
   const DURATIONS = ["15m", "30m", "45m", "60m"];
   const QUESTION_COUNTS = ["1", "2", "3"];
 
-  // --- 2. URL SYNC HANDLER ---
   const updateUrl = (updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
@@ -62,10 +58,7 @@ function SetupContent() {
     if (firstOfNewMode) {
       setSelectedEntry(firstOfNewMode);
       setSelectedSkills(firstOfNewMode.skills);
-      updateUrl({
-        mode: newMode,
-        slug: firstOfNewMode.slug,
-      });
+      updateUrl({ mode: newMode, slug: firstOfNewMode.slug });
     }
   };
 
@@ -96,7 +89,6 @@ function SetupContent() {
     setSelectedSkills(newSkills);
   };
 
-  const themeColor = setupMode === "role" ? "cyan" : "amber";
   const activeEntries = INTERVIEW_DATA.filter((i) => i.type === setupMode);
 
   const handleInitialize = () => {
@@ -105,7 +97,6 @@ function SetupContent() {
     params.set("mode", setupMode);
     params.set("lv", seniority);
 
-    // Send either duration or question count based on mode
     if (setupMode === "role") {
       params.set("dur", duration);
     } else {
@@ -116,32 +107,41 @@ function SetupContent() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-cyan-500/30 pb-24">
-      <nav className="sticky top-20 z-40 border-b border-white/5 bg-black/50 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center px-6 py-4">
+    <main
+      className="min-h-screen bg-background text-foreground pb-24 transition-colors duration-700 ease-in-out"
+      style={
+        {
+          // DYNAMIC CSS VARIABLE SWAP:
+          // This instantly changes the active color for all 'accent' classes inside the page.
+          "--accent":
+            setupMode === "role" ? "var(--accent-role)" : "var(--accent-topic)",
+          "--accent-light":
+            setupMode === "role"
+              ? "var(--accent-role-light)"
+              : "var(--accent-topic-light)",
+        } as React.CSSProperties
+      }
+    >
+
+      <div className="mx-auto pt-32 max-w-6xl px-6">
+
+        <header className="mb-12">
           <Link
             href="/interview-prep"
-            className="group flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-white"
+            className="cursor-return group mb-10 inline-flex items-center gap-3 text-sm font-medium text-muted hover:text-foreground transition-colors"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.02] group-hover:bg-white/[0.05]">
+            <div className="cursor-back flex h-8 w-8 items-center justify-center rounded-full border border-divider bg-transparent group-hover:border-accent transition-colors">
               <ChevronLeft className="h-4 w-4" />
             </div>
             Back to Selection
           </Link>
-        </div>
-      </nav>
-
-      <div className="mx-auto mt-12 max-w-6xl px-6">
-        <header className="mb-12">
-          <div
-            className={`mb-4 flex items-center gap-2 text-${themeColor}-500`}
-          >
-            <Settings2 className="h-5 w-5" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+          <div className="mb-4 flex items-center gap-2 text-accent transition-colors duration-500">
+            <Settings2 className="h-5 w-5 stroke-[1.5]" />
+            <span className="font-heading text-xs font-medium uppercase tracking-widest">
               Configuration
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-white">
+          <h1 className="font-heading text-4xl md:text-5xl font-light tracking-tight text-foreground">
             Setup your session.
           </h1>
         </header>
@@ -149,16 +149,24 @@ function SetupContent() {
         <div className="grid gap-12 lg:grid-cols-[1fr_400px]">
           <div className="space-y-12">
             {/* Mode Switcher */}
-            <div className="inline-flex rounded-full border border-white/10 bg-white/[0.02] p-1">
+            <div className="inline-flex rounded-full border border-divider bg-background-alt p-1">
               <button
                 onClick={() => handleModeToggle("role")}
-                className={`rounded-full px-8 py-2.5 text-xs font-bold uppercase tracking-widest transition-all ${setupMode === "role" ? "bg-white text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
+                className={`cursor-select rounded-full px-8 py-2.5 font-heading text-sm font-medium uppercase tracking-wider transition-all duration-300 ${
+                  setupMode === "role"
+                    ? "bg-accent text-background shadow-sm"
+                    : "text-muted hover:text-foreground"
+                }`}
               >
                 Mock Interview
               </button>
               <button
                 onClick={() => handleModeToggle("topic")}
-                className={`rounded-full px-8 py-2.5 text-xs font-bold uppercase tracking-widest transition-all ${setupMode === "topic" ? "bg-white text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
+                className={`cursor-select rounded-full px-8 py-2.5 font-heading text-sm font-medium uppercase tracking-wider transition-all duration-300 ${
+                  setupMode === "topic"
+                    ? "bg-accent text-background shadow-sm"
+                    : "text-muted hover:text-foreground"
+                }`}
               >
                 Targeted Practice
               </button>
@@ -166,8 +174,8 @@ function SetupContent() {
 
             {/* Selection Grid */}
             <section>
-              <h3 className="mb-6 flex items-center gap-3 text-lg font-bold text-white">
-                <Briefcase className="h-5 w-5 text-zinc-500" />
+              <h3 className="font-heading mb-6 flex items-center gap-3 text-2xl font-medium text-foreground">
+                <Briefcase className="h-6 w-6 text-accent stroke-[1.5] transition-colors duration-500" />
                 Select {setupMode === "role" ? "Position" : "Topic"}
               </h3>
               <div className="flex flex-wrap gap-3">
@@ -175,10 +183,10 @@ function SetupContent() {
                   <button
                     key={entry.slug}
                     onClick={() => handleEntryChange(entry.slug)}
-                    className={`rounded-full border px-6 py-3 text-sm font-bold transition-all duration-300 ${
+                    className={`cursor-select rounded-full border px-6 py-3 text-sm font-medium transition-all duration-300 ${
                       selectedEntry.slug === entry.slug
-                        ? `border-${themeColor}-500/50 bg-${themeColor}-500/10 text-${themeColor}-400 shadow-[0_0_25px_rgba(0,0,0,0.5)]`
-                        : "border-white/10 bg-white/[0.02] text-zinc-500 hover:border-white/20 hover:text-white"
+                        ? "border-accent bg-accent-light text-foreground shadow-sm"
+                        : "border-divider bg-transparent text-muted hover:border-accent/50 hover:text-foreground"
                     }`}
                   >
                     {entry.title}
@@ -189,25 +197,25 @@ function SetupContent() {
 
             {/* Focus Areas */}
             <section>
-              <h3 className="mb-6 flex items-center justify-between text-lg font-bold text-white">
+              <h3 className="font-heading mb-6 flex items-center justify-between text-2xl font-medium text-foreground">
                 <div className="flex items-center gap-3">
-                  <Layers className="h-5 w-5 text-zinc-500" />
+                  <Layers className="h-6 w-6 text-accent stroke-[1.5] transition-colors duration-500" />
                   Focus Areas
                 </div>
-                <span className="text-[10px] font-black uppercase text-zinc-600">
+                <span className="font-heading text-xs font-medium uppercase tracking-widest text-muted">
                   {selectedSkills.length} active
                 </span>
               </h3>
-              <div className="rounded-3xl border border-white/5 bg-white/[0.01] p-8 backdrop-blur-sm">
+              <div className="rounded-2xl border border-divider bg-background-alt/50 p-8">
                 <div className="flex flex-wrap gap-3">
                   {selectedEntry.skills.map((skill) => (
                     <button
                       key={skill}
                       onClick={() => toggleSkill(skill)}
-                      className={`rounded-full border px-5 py-2 text-xs font-bold transition-all duration-300 ${
+                      className={`rounded-full border px-5 py-2 text-sm font-medium transition-all duration-300 ${
                         selectedSkills.includes(skill)
-                          ? `border-${themeColor}-500/50 bg-${themeColor}-500/10 text-${themeColor}-400 shadow-[0_0_15px_rgba(0,0,0,0.5)]`
-                          : "border-white/10 bg-white/[0.02] text-zinc-500 hover:border-white/20 hover:text-white"
+                          ? "border-accent bg-accent-light text-foreground shadow-sm"
+                          : "border-divider bg-transparent text-muted hover:border-accent/50 hover:text-foreground"
                       }`}
                     >
                       {skill}
@@ -219,8 +227,8 @@ function SetupContent() {
 
             <div className="grid gap-12 md:grid-cols-2">
               <section>
-                <h3 className="mb-6 flex items-center gap-3 text-lg font-bold text-white">
-                  <Target className="h-5 w-5 text-zinc-500" />
+                <h3 className="font-heading mb-6 flex items-center gap-3 text-2xl font-medium text-foreground">
+                  <Target className="h-6 w-6 text-accent stroke-[1.5] transition-colors duration-500" />
                   Level
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -230,10 +238,10 @@ function SetupContent() {
                       onClick={() =>
                         handleSettingChange("lv", level, setSeniority)
                       }
-                      className={`rounded-full border px-5 py-2 text-xs font-bold transition-all ${
+                      className={`cursor-select rounded-full border px-5 py-2 text-sm font-medium transition-all ${
                         seniority === level
-                          ? `border-${themeColor}-500/50 bg-${themeColor}-500/10 text-${themeColor}-400`
-                          : "border-white/10 bg-white/[0.02] text-zinc-500"
+                          ? "border-accent bg-accent-light text-foreground"
+                          : "border-divider bg-transparent text-muted hover:text-foreground hover:border-accent/50"
                       }`}
                     >
                       {level}
@@ -243,8 +251,8 @@ function SetupContent() {
               </section>
 
               <section>
-                <h3 className="mb-6 flex items-center gap-3 text-lg font-bold text-white">
-                  <Clock className="h-5 w-5 text-zinc-500" />
+                <h3 className="font-heading mb-6 flex items-center gap-3 text-2xl font-medium text-foreground">
+                  <Clock className="h-6 w-6 text-accent stroke-[1.5] transition-colors duration-500" />
                   {setupMode === "role" ? "Duration" : "Questions"}
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -257,11 +265,11 @@ function SetupContent() {
                             ? handleSettingChange("dur", val, setDuration)
                             : handleSettingChange("q", val, setQuestionCount)
                         }
-                        className={`rounded-full border px-5 py-2 text-xs font-bold transition-all ${
+                        className={`cursor-select rounded-full border px-5 py-2 text-sm font-medium transition-all ${
                           (setupMode === "role" ? duration : questionCount) ===
                           val
-                            ? `border-${themeColor}-500/50 bg-${themeColor}-500/10 text-${themeColor}-400`
-                            : "border-white/10 bg-white/[0.02] text-zinc-500"
+                            ? "border-accent bg-accent-light text-foreground"
+                            : "border-divider bg-transparent text-muted hover:text-foreground hover:border-accent/50"
                         }`}
                       >
                         {setupMode === "role"
@@ -276,47 +284,44 @@ function SetupContent() {
           </div>
 
           {/* --- Right Column: Summary Card --- */}
-          <div className="h-fit lg:sticky lg:top-40">
-            <div className="rounded-3xl border border-white/10 bg-[#09090B] p-8 shadow-2xl relative overflow-hidden">
-              <div
-                className={`absolute -right-12 -top-12 h-32 w-32 rounded-full blur-[80px] opacity-20 bg-${themeColor}-500`}
-              />
-              <h3 className="mb-8 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
-                <Sparkles className={`h-4 w-4 text-${themeColor}-400`} />
+          <div className="h-fit lg:sticky lg:top-32">
+            <div className="rounded-2xl border border-divider bg-background-alt p-8 relative overflow-hidden transition-colors duration-500">
+              <h3 className="font-heading mb-8 flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground">
+                <Sparkles className="h-5 w-5 text-accent stroke-[1.5] transition-colors duration-500" />
                 Session Brief
               </h3>
-              <div className="space-y-5 mb-10">
-                <div className="flex justify-between border-b border-white/5 pb-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-600">
+              <div className="space-y-6 mb-10">
+                <div className="flex justify-between border-b border-divider pb-4">
+                  <span className="font-heading text-xs font-medium uppercase tracking-widest text-muted">
                     Context
                   </span>
-                  <span className="text-sm font-bold text-white">
+                  <span className="text-sm font-medium text-foreground">
                     {setupMode === "role"
                       ? "Mock Simulation"
                       : "Targeted Drill"}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-white/5 pb-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-600">
+                <div className="flex justify-between border-b border-divider pb-4">
+                  <span className="font-heading text-xs font-medium uppercase tracking-widest text-muted">
                     Focus
                   </span>
-                  <span className="text-sm font-bold text-white">
+                  <span className="text-sm font-medium text-foreground text-right max-w-[150px] truncate">
                     {selectedEntry.title}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-white/5 pb-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-600">
+                <div className="flex justify-between border-b border-divider pb-4">
+                  <span className="font-heading text-xs font-medium uppercase tracking-widest text-muted">
                     Level
                   </span>
-                  <span className="text-sm font-bold text-white">
+                  <span className="text-sm font-medium text-foreground">
                     {seniority}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-white/5 pb-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-600">
+                <div className="flex justify-between border-b border-divider pb-4">
+                  <span className="font-heading text-xs font-medium uppercase tracking-widest text-muted">
                     Metric
                   </span>
-                  <span className="text-sm font-bold text-white">
+                  <span className="text-sm font-medium text-foreground">
                     {setupMode === "role"
                       ? duration
                       : `${questionCount} ${parseInt(questionCount) === 1 ? "Question" : "Questions"}`}
@@ -325,7 +330,7 @@ function SetupContent() {
               </div>
               <button
                 onClick={handleInitialize}
-                className={`w-full rounded-full py-4 text-xs font-black uppercase tracking-widest text-black transition-all hover:scale-[1.02] active:scale-95 bg-${themeColor}-500 shadow-[0_0_30px_rgba(0,0,0,0.5)]`}
+                className="cursor-select w-full rounded-full bg-accent py-4 font-heading text-sm font-medium uppercase tracking-widest text-background shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:shadow-lg"
               >
                 Initialize AI Engine
               </button>
@@ -339,7 +344,7 @@ function SetupContent() {
 
 export default function SetupPage() {
   return (
-    <Suspense fallback={<div className="h-screen bg-black" />}>
+    <Suspense fallback={<div className="h-screen bg-background" />}>
       <SetupContent />
     </Suspense>
   );

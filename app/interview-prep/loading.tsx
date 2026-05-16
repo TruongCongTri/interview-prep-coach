@@ -1,12 +1,15 @@
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-32">
-      <div className="mb-16 h-20 w-64 animate-pulse rounded-2xl bg-zinc-900" />
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-64 animate-pulse rounded-3xl border border-white/5 bg-zinc-950" />
-        ))}
-      </div>
+    <div className="mx-auto mt-32 max-w-6xl px-6 grid gap-12 lg:grid-cols-[1fr_400px]">
+       <div className="space-y-12">
+          {/* Skeleton for Mode Switcher */}
+          <div className="h-10 w-64 animate-pulse rounded-full bg-divider/50" />
+          {/* Skeleton for Options */}
+          <div className="h-64 animate-pulse rounded-xl bg-background-alt" />
+          <div className="h-40 animate-pulse rounded-xl bg-background-alt" />
+       </div>
+       {/* Skeleton for Summary Card */}
+       <div className="h-[500px] animate-pulse rounded-xl bg-background-alt" />
     </div>
   );
 }

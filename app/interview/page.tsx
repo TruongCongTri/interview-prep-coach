@@ -64,7 +64,6 @@ function InterviewContent() {
   const data = INTERVIEW_DATA.find((item) => item.slug === slug);
 
   // 2. Calculate Question Count based on Duration
-  // Mapping: 15m = 2 Qs, 30m = 3 Qs, 45m = 4 Qs, 60m = 5 Qs
   const calculateTargetCount = () => {
     if (mode === "topic") return parseInt(qParam);
 
@@ -85,10 +84,8 @@ function InterviewContent() {
   // 1. Calculate Total Seconds for the session
   const totalSeconds = useMemo(() => {
     if (mode === "topic") {
-      // Estimate: 5 minutes (300s) per question
       return parseInt(qParam) * 300;
     }
-    // Role Mode: "30m" -> 30 * 60 = 1800s
     return parseInt(dur) * 60;
   }, [mode, dur, qParam]);
 
@@ -101,7 +98,6 @@ function InterviewContent() {
 
     const interval = setInterval(() => {
       setElapsedTime((prev) => {
-        // Optional: Auto-finish if time runs out
         if (prev >= totalSeconds) {
           clearInterval(interval);
           return prev;
@@ -127,9 +123,6 @@ function InterviewContent() {
     if (!data) return [];
 
     const targetCount = calculateTargetCount();
-
-    // We shuffle from commonQuestions (the pool) and convert to ConversationTurn format
-    // For this logic, ensure commonQuestions and mockConversation share the same structure
     const pool = [...data.mockConversation];
 
     for (let i = pool.length - 1; i > 0; i--) {
@@ -159,14 +152,9 @@ function InterviewContent() {
   }, [transcript]);
 
   if (!data)
-    return <div className="text-white text-center p-20">Invalid Session</div>;
+    return <div className="text-foreground bg-background text-center p-20 min-h-screen">Invalid Session</div>;
 
-  const theme = {
-    primary: data.type === "role" ? "cyan" : "amber",
-    text: data.type === "role" ? "text-cyan-500" : "text-amber-500",
-    bg: data.type === "role" ? "bg-cyan-500" : "bg-amber-500",
-    glow: data.type === "role" ? "rgba(6,182,212,0.3)" : "rgba(245,158,11,0.3)",
-  };
+  const isRole = data.type === "role";
 
   const startInterview = () => {
     if (containerRef.current && !document.fullscreenElement) {
@@ -234,19 +222,25 @@ function InterviewContent() {
 
   if (sessionPhase === "setup") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-black p-6 text-white">
+      <main 
+        className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground"
+        style={{
+          '--accent': isRole ? 'var(--accent-role)' : 'var(--accent-topic)',
+          '--accent-light': isRole ? 'var(--accent-role-light)' : 'var(--accent-topic-light)',
+        } as React.CSSProperties}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-xl rounded-3xl border border-white/10 bg-zinc-950 p-8 md:p-12"
+          className="w-full max-w-xl rounded-[32px] border border-divider bg-background-alt p-8 md:p-12 shadow-sm"
         >
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-white">
+          <div className="mb-10 text-center">
+            <h1 className="font-heading text-4xl font-light tracking-tight text-foreground">
               System Check
             </h1>
-            <p className="mt-3 text-zinc-400">
+            <p className="mt-3 text-muted">
               Preparation for:{" "}
-              <span className="text-white font-semibold">{data.title}</span>
+              <span className="text-foreground font-medium">{data.title}</span>
             </p>
           </div>
           <div className="space-y-4">
@@ -267,17 +261,25 @@ function InterviewContent() {
             ].map((p, i) => (
               <div
                 key={i}
-                className={`flex items-center justify-between rounded-2xl border p-5 ${p.state === "denied" ? "border-red-500/50 bg-red-500/5" : "border-white/5 bg-white/[0.02]"}`}
+                className={`flex items-center justify-between rounded-2xl border p-5 transition-colors ${
+                  p.state === "denied" 
+                    ? "border-red-500/50 bg-red-50 text-red-600" 
+                    : "border-divider bg-background text-foreground"
+                }`}
               >
-                <div className="flex items-center gap-4 text-white">
+                <div className="flex items-center gap-4">
                   <p.icon
-                    className={`h-5 w-5 ${p.state === "granted" ? "text-emerald-500" : "text-zinc-500"}`}
+                    className={`h-5 w-5 stroke-[1.5] ${p.state === "granted" ? "text-[color:var(--accent)]" : "text-muted"}`}
                   />
-                  <span className="font-semibold">{p.label}</span>
+                  <span className="font-medium">{p.label}</span>
                 </div>
                 <button
                   onClick={() => p.set("granted")}
-                  className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-widest ${p.state === "granted" ? "bg-emerald-500/10 text-emerald-500" : "bg-white text-black hover:bg-zinc-200 transition-colors"}`}
+                  className={`cursor-select rounded-full px-6 py-2 font-heading text-xs font-medium uppercase tracking-widest transition-colors ${
+                    p.state === "granted" 
+                      ? "bg-[color:var(--accent-light)] text-[color:var(--accent)]" 
+                      : "bg-foreground text-background hover:scale-105 active:scale-95"
+                  }`}
                 >
                   {p.state === "granted" ? "Ready" : "Allow"}
                 </button>
@@ -287,9 +289,13 @@ function InterviewContent() {
           <button
             disabled={!allGranted}
             onClick={startInterview}
-            className={`mt-10 w-full rounded-full py-4 font-bold transition-all ${allGranted ? `${theme.bg} text-black shadow-lg hover:scale-[1.02]` : "bg-zinc-800 text-zinc-500"}`}
+            className={`cursor-start mt-10 w-full rounded-full py-4 font-heading text-sm font-medium uppercase tracking-widest transition-all ${
+              allGranted 
+                ? "bg-[color:var(--accent)] text-background shadow-md hover:scale-[1.02] active:scale-95" 
+                : "bg-divider text-muted cursor-not-allowed"
+            }`}
           >
-            Start Interview
+            Initiate Session
           </button>
         </motion.div>
       </main>
@@ -298,14 +304,19 @@ function InterviewContent() {
 
   if (isFinished) {
     return (
-      <main className="fixed inset-0 z-[200] flex items-center justify-center bg-black text-white">
+      <main 
+        className="fixed inset-0 z-[200] flex items-center justify-center bg-background text-foreground"
+        style={{
+          '--accent': isRole ? 'var(--accent-role)' : 'var(--accent-topic)',
+        } as React.CSSProperties}
+      >
         <div
-          className={`absolute h-[500px] w-[500px] rounded-full opacity-20 blur-[120px] ${theme.bg}`}
+          className="absolute h-[600px] w-[600px] rounded-full opacity-20 blur-[150px] bg-[color:var(--accent)] pointer-events-none"
         />
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative z-10 text-center"
+          className="relative z-10 text-center flex flex-col items-center"
         >
           <motion.div
             initial={{ rotate: -10, opacity: 0 }}
@@ -314,30 +325,32 @@ function InterviewContent() {
             className="mb-8 flex justify-center"
           >
             <div
-              className={`rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl`}
+              className="rounded-full border border-divider bg-background-alt p-8 shadow-sm"
             >
-              <Sparkles className={`h-12 w-12 ${theme.text}`} />
+              <Sparkles className="h-10 w-10 text-[color:var(--accent)] stroke-[1.5]" />
             </div>
           </motion.div>
-          <h2 className="text-5xl font-black tracking-tighter md:text-7xl">
+          <h2 className="font-heading text-5xl font-light tracking-tight md:text-7xl">
             Session Complete.
           </h2>
-          <p className="mt-6 text-xl text-zinc-500 font-medium italic">
+          <p className="mt-6 text-xl text-muted font-medium italic">
             &quot;Great job. You’ve completed the {data.title} simulation.&quot;
           </p>
-          <div className="mt-12 flex flex-col items-center gap-4">
-            <div className="flex items-center gap-3 px-6 py-3 rounded-full border border-white/5 bg-white/[0.02]">
-              <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
-                Generating Performance Report...
+          <div className="mt-16 flex flex-col items-center gap-6 w-full max-w-xs">
+            <div className="flex items-center gap-3 px-6 py-3 rounded-full border border-divider bg-background-alt">
+              <Loader2 className="h-4 w-4 animate-spin text-[color:var(--accent)]" />
+              <span className="font-heading text-xs font-medium uppercase tracking-[0.15em] text-muted">
+                Compiling Report...
               </span>
             </div>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "200px" }}
-              transition={{ duration: 3.5, ease: "easeInOut" }}
-              className={`h-1 rounded-full ${theme.bg}`}
-            />
+            <div className="w-full h-1 bg-divider rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 3.5, ease: "easeInOut" }}
+                className="h-full rounded-full bg-[color:var(--accent)]"
+              />
+            </div>
           </div>
         </motion.div>
       </main>
@@ -347,39 +360,45 @@ function InterviewContent() {
   return (
     <main
       ref={containerRef}
-      className="fixed inset-0 z-[9999] bg-black overflow-hidden flex h-screen w-full text-white"
+      className="fixed inset-0 z-[9999] bg-background overflow-hidden flex h-screen w-full text-foreground"
+      style={{
+        '--accent': isRole ? 'var(--accent-role)' : 'var(--accent-topic)',
+        '--accent-light': isRole ? 'var(--accent-role-light)' : 'var(--accent-topic-light)',
+      } as React.CSSProperties}
     >
-      <div className="relative flex flex-1 flex-col justify-between p-8">
+      <div className="relative flex flex-1 flex-col justify-between p-6 md:p-8">
+        
+        {/* HEADER CONTROLS */}
         <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.02] px-5 py-2.5 backdrop-blur-md">
+          <div className="flex items-center gap-4 rounded-full border border-divider bg-background-alt/80 px-6 py-3 backdrop-blur-md shadow-sm">
             {/* Countdown Pulse */}
             <div
-              className={`h-2 w-2 rounded-full ${remainingTime < 60 ? "bg-red-500 animate-ping" : theme.bg + " animate-pulse"}`}
+              className={`h-2.5 w-2.5 rounded-full ${remainingTime < 60 ? "bg-red-500 animate-ping" : "bg-[color:var(--accent)] animate-pulse"}`}
             />
 
             <div className="flex items-baseline gap-1.5 font-mono">
               {/* Remaining Time */}
               <span
-                className={`text-sm font-bold tracking-widest ${remainingTime < 60 ? "text-red-500" : "text-white"}`}
+                className={`text-sm font-medium tracking-widest ${remainingTime < 60 ? "text-red-500" : "text-foreground"}`}
               >
                 {formatTime(remainingTime)}
               </span>
 
               {/* Separator / Total Time */}
-              <span className="text-[10px] text-zinc-700">/</span>
-              <span className="text-[10px] font-bold text-zinc-500">
+              <span className="text-xs text-muted/50">/</span>
+              <span className="text-xs font-medium text-muted">
                 {formatTime(totalSeconds)}
               </span>
             </div>
 
-            <span className="h-3 w-px bg-white/10 mx-1" />
+            <span className="h-4 w-px bg-divider mx-2" />
 
             {/* Context Label */}
             <div className="flex flex-col">
-              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-zinc-600 leading-none mb-1">
+              <span className="font-heading text-[9px] font-medium uppercase tracking-widest text-muted leading-none mb-1">
                 {mode === "role" ? "Session Duration" : "Estimated Time"}
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 leading-none">
+              <span className="font-heading text-[11px] font-medium uppercase tracking-wider text-foreground leading-none">
                 {data.title}
               </span>
             </div>
@@ -387,69 +406,95 @@ function InterviewContent() {
 
           <button
             onClick={() => router.push("/interview-prep")}
-            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 hover:text-white transition-all"
+            className="cursor-back flex items-center gap-2 font-heading text-[10px] font-medium uppercase tracking-widest text-muted hover:text-foreground transition-all"
           >
-            Terminate{" "}
-            <XCircle className="h-4 w-4 text-zinc-800 group-hover:text-red-500" />
+            Terminate
+            <XCircle className="h-4 w-4 text-muted group-hover:text-red-500 transition-colors" />
           </button>
         </header>
+
+        {/* AI ORB VISUALIZATION */}
         <div className="flex flex-col items-center justify-center">
           <motion.div
             animate={
               isThinking
                 ? { scale: 1, opacity: 0.5 }
                 : aiState === "speaking"
-                  ? { scale: [1, 1.1, 1] }
+                  ? { scale: [1, 1.05, 1] }
                   : aiState === "processing"
                     ? { rotate: 360 }
                     : { scale: 1 }
             }
-            transition={{ duration: 2, repeat: Infinity }}
-            className={`relative flex h-48 w-48 items-center justify-center rounded-full border-[12px] transition-all duration-700 ${isThinking ? "border-amber-500/50" : aiState === "speaking" ? `border-${theme.primary}-500 shadow-[0_0_60px_rgba(0,0,0,0.3)]` : aiState === "processing" ? "border-zinc-700" : "border-white/10"}`}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className={`relative flex h-48 w-48 items-center justify-center rounded-full border-[8px] transition-all duration-700 ${
+              isThinking 
+                ? "border-muted/20" 
+                : aiState === "speaking" 
+                  ? "border-[color:var(--accent)] shadow-[0_0_40px_var(--accent-light)]" 
+                  : aiState === "processing" 
+                    ? "border-divider border-t-[color:var(--accent)]" 
+                    : "border-divider"
+            }`}
           >
             <div
-              className={`h-24 w-24 rounded-full blur-2xl opacity-40 ${isThinking ? "bg-amber-500" : theme.bg}`}
+              className={`h-28 w-28 rounded-full blur-xl opacity-60 transition-colors ${
+                isThinking ? "bg-muted" : "bg-[color:var(--accent)]"
+              }`}
             />
           </motion.div>
-          <div className="mt-12 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">
-            {isThinking ? "AI Paused" : aiState}
+          <div className="mt-14 font-heading text-xs font-medium uppercase tracking-[0.3em] text-muted">
+            {isThinking ? "System Paused" : aiState}
           </div>
         </div>
-        <div className="flex items-center justify-center gap-6 pb-4">
+
+        {/* BOTTOM CONTROLS */}
+        <div className="flex items-center justify-center gap-6 pb-6">
           <button
             onClick={() => setIsMicMuted(!isMicMuted)}
-            className={`p-5 rounded-full border transition-all ${isMicMuted ? "border-red-500/50 bg-red-500/10 text-red-500" : "border-white/10 bg-white/[0.02] text-white"}`}
+            className={`cursor-mute flex h-14 w-14 items-center justify-center rounded-full border transition-all ${
+              isMicMuted 
+                ? "border-red-500/50 bg-red-50 text-red-600 shadow-sm" 
+                : "border-divider bg-background text-foreground hover:bg-background-alt"
+            }`}
           >
-            {isMicMuted ? <MicOff /> : <Mic />}
+            {isMicMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
           </button>
           <button
             onClick={() => setIsThinking(!isThinking)}
-            className={`flex items-center gap-3 px-8 py-4 rounded-full border font-bold transition-all ${isThinking ? `border-amber-500 bg-amber-500 text-black shadow-[0_0_30px_rgba(245,158,11,0.3)]` : `border-white/10 bg-white/[0.02] text-zinc-400 hover:text-white`}`}
+            className={`cursor-think flex items-center gap-3 px-8 py-4 rounded-full border transition-all ${
+              isThinking 
+                ? "border-muted bg-muted text-background shadow-md" 
+                : "border-divider bg-background text-foreground hover:bg-background-alt"
+            }`}
           >
-            <Brain className="h-5 w-5" />
-            {isThinking ? "Resume" : "Pause to Think"}
+            <Brain className="h-5 w-5 stroke-[1.5]" />
+            <span className="font-heading text-sm font-medium uppercase tracking-wider">
+              {isThinking ? "Resume Session" : "Pause to Think"}
+            </span>
           </button>
           <button
             onClick={handleNextTurn}
             disabled={isThinking}
-            className={`px-10 py-4 rounded-full font-bold text-black transition-all ${theme.bg} hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed`}
+            className={`cursor-answer px-10 py-4 rounded-full font-heading text-sm font-medium uppercase tracking-wider text-background transition-all bg-[color:var(--accent)] hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             Complete Answer
           </button>
           <button
             onClick={handleSkipToFinish}
-            className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-all"
+            className="cursor-skip flex items-center gap-2 font-heading text-xs font-medium uppercase tracking-widest text-muted hover:text-foreground transition-all ml-4"
           >
             Skip <FastForward className="h-4 w-4" />
           </button>
         </div>
       </div>
-      <aside className="w-[450px] border-l border-white/5 bg-[#030303] flex flex-col">
-        <div className="p-8 border-b border-white/5 flex items-center justify-between">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
-            AI Transcript (CC)
+
+      {/* TRANSCRIPT SIDEBAR */}
+      <aside className="w-[450px] border-l border-divider bg-background-alt flex flex-col hidden lg:flex">
+        <div className="p-8 border-b border-divider flex items-center justify-between bg-background/50">
+          <span className="font-heading text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
+            Live Transcript
           </span>
-          <Volume2 className="h-4 w-4 text-zinc-700" />
+          <Volume2 className="h-4 w-4 text-muted" />
         </div>
         <div className="flex-1 overflow-y-auto p-8 space-y-10 scrollbar-hide">
           {transcript.map((msg, i) => (
@@ -457,11 +502,15 @@ function InterviewContent() {
               key={msg.id}
               className={`flex flex-col ${msg.speaker === "ai" ? "items-start" : "items-end"}`}
             >
-              <span className="text-[9px] font-black uppercase text-zinc-800 mb-3">
-                {msg.speaker === "ai" ? "V-Coach AI" : "Interviewee"}
+              <span className="font-heading text-[10px] font-medium uppercase tracking-widest text-muted mb-3">
+                {msg.speaker === "ai" ? "Fluence AI" : "You"}
               </span>
               <div
-                className={`max-w-[90%] text-sm leading-relaxed ${msg.speaker === "ai" ? "text-zinc-100" : `${theme.text} font-medium italic`}`}
+                className={`max-w-[90%] text-base leading-relaxed p-5 rounded-2xl ${
+                  msg.speaker === "ai" 
+                    ? "bg-background border border-divider text-foreground" 
+                    : "bg-[color:var(--accent-light)] border border-[color:var(--accent)]/20 text-foreground font-medium"
+                }`}
               >
                 {msg.speaker === "ai" && i === transcript.length - 1 ? (
                   <Typewriter text={msg.text} />
@@ -480,7 +529,7 @@ function InterviewContent() {
 
 export default function InterviewRoomPage() {
   return (
-    <Suspense fallback={<div className="h-screen bg-black" />}>
+    <Suspense fallback={<div className="h-screen bg-background" />}>
       <InterviewContent />
     </Suspense>
   );

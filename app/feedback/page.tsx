@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, Suspense, useMemo } from "react";
+import { useState, useRef, Suspense, useMemo, useEffect } from "react";
 import { useSearchParams, notFound } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -15,7 +15,6 @@ import {
   ChevronDown,
   ChevronUp,
   Lightbulb,
-  MessageSquare,
 } from "lucide-react";
 import { INTERVIEW_DATA } from "@/lib/mock-data";
 
@@ -36,19 +35,34 @@ function FeedbackContent() {
     return indexArray.map((idx) => data.mockConversation[idx]).filter(Boolean);
   }, [data, indicesParam]);
 
+  // --- INTERSECTION OBSERVER FOR NATURAL SCROLL ---
+  useEffect(() => {
+    const sections = containerRef.current?.querySelectorAll("section");
+    if (!sections || sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = Array.from(sections).indexOf(entry.target as HTMLElement);
+            if (index !== -1) {
+              setActiveTurnIndex(index);
+            }
+          }
+        });
+      },
+      // Trigger when a section enters the middle 40% of the viewport
+      { threshold: 0.1, rootMargin: "-30% 0px -30% 0px" } 
+    );
+
+    sections.forEach((section) => observer.observe(section));
+
+    return () => observer.disconnect();
+  }, [sessionConversation]);
+
   if (!data || sessionConversation.length === 0) return notFound();
 
   const isRole = data.type === "role";
-  const theme = {
-    primary: isRole ? "cyan" : "amber",
-    text: isRole ? "text-cyan-400" : "text-amber-400",
-    bg: isRole ? "bg-cyan-500" : "bg-amber-500",
-    border: isRole ? "border-white/10" : "border-white/10",
-    glow: isRole
-      ? "shadow-[0_0_50px_rgba(6,182,212,0.15)]"
-      : "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
-    tint: isRole ? "bg-cyan-500/5" : "bg-amber-500/5",
-  };
 
   const avgScore = Math.round(
     sessionConversation.reduce(
@@ -60,50 +74,63 @@ function FeedbackContent() {
   const scrollToSection = (index: number) => {
     const sections = containerRef.current?.querySelectorAll("section");
     if (sections && sections[index]) {
-      sections[index].scrollIntoView({ behavior: "smooth" });
-      setActiveTurnIndex(index);
+      // Offset by 80px to account for the sticky nav bar
+      const y = sections[index].getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: y, behavior: "smooth" });
     }
   };
 
   return (
-    <main className="fixed inset-0 h-screen w-full bg-black text-white overflow-hidden selection:bg-cyan-500/30">
-      <nav className="sticky top-20 z-40 border-b border-white/5 bg-black/50 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link
-            href="/interview-prep"
-            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" /> Exit
-          </Link>
-          <div
-            className={`rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[10px] font-black uppercase tracking-widest ${theme.text}`}
-          >
-            {data.title} Assessment
+    <main 
+      className="min-h-screen w-full bg-background text-foreground pb-24 selection:bg-accent-light"
+      style={{
+        '--accent': isRole ? 'var(--accent-role)' : 'var(--accent-topic)',
+        '--accent-light': isRole ? 'var(--accent-role-light)' : 'var(--accent-topic-light)',
+      } as React.CSSProperties}
+    >
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 pt-25">
+        <Link
+          href="/interview-prep"
+          className="cursor-back group flex items-center gap-3 text-sm font-medium text-muted hover:text-foreground transition-colors"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-divider bg-transparent transition-colors group-hover:border-[color:var(--accent)]">
+            <ChevronLeft className="h-4 w-4" />
           </div>
+          Back to Library
+        </Link>
+        <div
+          className="rounded-full border border-[color:var(--accent)]/30 bg-[color:var(--accent-light)] px-4 py-1.5 font-heading text-[10px] font-medium uppercase tracking-widest text-[color:var(--accent)]"
+        >
+          {data.title} Assessment
         </div>
-      </nav>
+      </div>
+
 
       {/* --- FLOATING NAVIGATION DOCK --- */}
       <div className="fixed bottom-10 left-1/2 z-[100] -translate-x-1/2">
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/80 p-2 backdrop-blur-2xl shadow-2xl"
+          className="flex items-center gap-2 rounded-full border border-divider bg-background/90 p-2 backdrop-blur-2xl shadow-lg"
         >
           {/* Previous Section Button */}
           <button
             onClick={() => scrollToSection(Math.max(0, activeTurnIndex - 1))}
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5 transition-colors disabled:opacity-20"
+            className="cursor-view flex h-10 w-10 items-center justify-center rounded-full hover:bg-background-alt transition-colors disabled:opacity-30"
             disabled={activeTurnIndex === 0}
           >
-            <ChevronUp className="h-4 w-4 text-zinc-500" />
+            <ChevronUp className="h-4 w-4 text-muted" />
           </button>
 
-          <div className="flex items-center gap-1.5 px-2">
+          <div className="flex items-center gap-2 px-3">
             {/* 1. Hero Dot (Index 0) */}
             <button
               onClick={() => scrollToSection(0)}
-              className={`h-2 w-2 rounded-full transition-all ${activeTurnIndex === 0 ? theme.bg : "bg-zinc-700 hover:bg-zinc-500"}`}
+              className={`cursor-goto h-2.5 w-2.5 rounded-full transition-all ${
+                activeTurnIndex === 0 
+                  ? "bg-[color:var(--accent)] scale-110" 
+                  : "bg-divider hover:bg-[color:var(--accent)]/50"
+              }`}
             />
 
             {/* 2. Dynamic Question Dots (Indices 1 to N) */}
@@ -111,21 +138,29 @@ function FeedbackContent() {
               <button
                 key={i}
                 onClick={() => scrollToSection(i + 1)}
-                className={`h-2 w-2 rounded-full transition-all ${activeTurnIndex === i + 1 ? theme.bg : "bg-zinc-700 hover:bg-zinc-500"}`}
+                className={`cursor-backward h-2.5 w-2.5 rounded-full transition-all ${
+                  activeTurnIndex === i + 1 
+                    ? "bg-[color:var(--accent)] scale-110" 
+                    : "bg-divider hover:bg-[color:var(--accent)]/50"
+                }`}
               />
             ))}
 
             {/* 3. Final CTA Dot (Index N + 1) */}
             <button
               onClick={() => scrollToSection(sessionConversation.length + 1)}
-              className={`h-2 w-2 rounded-full transition-all ${activeTurnIndex === sessionConversation.length + 1 ? theme.bg : "bg-zinc-700 hover:bg-zinc-500"}`}
+              className={`cursor-forward h-2.5 w-2.5 rounded-full transition-all ${
+                activeTurnIndex === sessionConversation.length + 1 
+                  ? "bg-[color:var(--accent)] scale-110" 
+                  : "bg-divider hover:bg-[color:var(--accent)]/50"
+              }`}
             />
           </div>
 
-          <div className="h-4 w-px bg-white/10 mx-2" />
+          <div className="h-4 w-px bg-divider mx-2" />
 
           {/* Counter Text */}
-          <span className="px-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 min-w-[80px] text-center">
+          <span className="px-3 font-heading text-[10px] font-medium uppercase tracking-widest text-muted min-w-[80px] text-center">
             {activeTurnIndex === 0 ? (
               "Overview"
             ) : activeTurnIndex > sessionConversation.length ? (
@@ -133,7 +168,7 @@ function FeedbackContent() {
             ) : (
               <>
                 Turn {activeTurnIndex}{" "}
-                <span className="text-zinc-700">
+                <span className="text-divider ml-1">
                   / {sessionConversation.length}
                 </span>
               </>
@@ -147,126 +182,119 @@ function FeedbackContent() {
                 Math.min(sessionConversation.length + 1, activeTurnIndex + 1),
               )
             }
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/5 transition-colors disabled:opacity-20"
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-background-alt transition-colors disabled:opacity-30"
             disabled={activeTurnIndex === sessionConversation.length + 1}
           >
-            <ChevronDown className="h-4 w-4 text-zinc-500" />
+            <ChevronDown className="h-4 w-4 text-muted" />
           </button>
         </motion.div>
       </div>
 
-      <div
-        ref={containerRef}
-        className="h-screen w-full overflow-y-auto snap-y snap-mandatory scrollbar-hide pt-2"
-        onScroll={(e) =>
-          setActiveTurnIndex(
-            Math.round(e.currentTarget.scrollTop / window.innerHeight),
-          )
-        }
-      >
-        {/* HERO */}
-        <section className="h-screen w-full flex shrink-0 snap-start items-center justify-center p-6">
-          <div
-            className={`relative max-w-5xl w-full rounded-[40px] border border-white/10 bg-zinc-950 p-16 ${theme.glow} overflow-hidden`}
-          >
+      {/* Main Flow Container */}
+      <div ref={containerRef} className="flex flex-col w-full">
+        
+        {/* HERO SECTION */}
+        <section className="min-h-[90vh] w-full flex items-center justify-center p-6 border-b border-divider">
+          <div className="relative max-w-5xl w-full rounded-[40px] border border-divider bg-background-alt p-12 lg:p-20 overflow-hidden shadow-sm">
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
-              <div className="text-left">
-                <h1 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-4">
+              <div className="text-left w-full">
+                <h1 className="font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted mb-6">
                   Assessment Complete
                 </h1>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-9xl font-black tracking-tighter leading-none">
+                  <span className="text-9xl font-light tracking-tighter leading-none text-[color:var(--accent)]">
                     {avgScore}
                   </span>
-                  <span className="text-2xl font-bold text-zinc-700">/100</span>
+                  <span className="text-2xl font-medium text-muted">/100</span>
                 </div>
-                <h2 className="mt-8 text-3xl font-bold text-white">
+                <h2 className="mt-8 font-heading text-4xl font-medium text-foreground">
                   {data.title}
                 </h2>
                 <button
                   onClick={() => scrollToSection(1)}
-                  className={`mt-8 rounded-full ${theme.bg} px-10 py-4 font-black uppercase tracking-widest text-black text-xs shadow-2xl`}
+                  className="cursor-view mt-10 rounded-full bg-foreground px-10 py-4 font-heading text-xs font-medium uppercase tracking-widest text-background shadow-md hover:scale-105 active:scale-95 transition-all inline-flex"
                 >
                   View Breakdown
                 </button>
               </div>
-              <div className="hidden md:block opacity-10">
-                <Trophy className={`h-48 w-48 ${theme.text}`} />
+              <div className="hidden md:block opacity-20 shrink-0">
+                <Trophy className="h-64 w-64 text-[color:var(--accent)] stroke-[1]" />
               </div>
             </div>
             <div
-              className={`absolute -right-20 -top-20 h-96 w-96 rounded-full blur-[120px] opacity-10 ${theme.bg}`}
+              className="absolute -right-32 -top-32 h-[500px] w-[500px] rounded-full blur-[120px] opacity-20 bg-[color:var(--accent)] pointer-events-none"
             />
           </div>
         </section>
 
         {/* FEEDBACK CARDS */}
-        {sessionConversation.map((turn, index) => {
-          const ideal = turn; // In a randomized flow, 'turn' already contains the specific context
+        {sessionConversation.map((turn) => {
+          const ideal = turn;
           return (
             <section
               key={turn.id}
-              className="h-screen w-full flex shrink-0 snap-start items-center justify-center p-8 lg:p-12"
+              className="min-h-screen w-full flex items-center justify-center p-6 lg:py-24 border-b border-divider"
             >
-              <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 h-full max-h-[80vh]">
+              <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
                 {/* LEFT: DIALOGUE & SUGGESTED ANSWER */}
-                <div className="lg:col-span-7 flex flex-col gap-6 overflow-hidden">
-                  <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-8 shadow-xl">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="flex h-5 w-5 items-center justify-center rounded bg-zinc-800 text-[10px] font-black text-zinc-500">
+                <div className="lg:col-span-7 flex flex-col gap-6">
+                  <div className="rounded-[32px] border border-divider bg-background-alt p-8">
+                    <div className="flex items-center gap-3 mb-5">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-divider font-heading text-[10px] font-medium text-muted">
                         Q
                       </span>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                        The Question
+                      <span className="font-heading text-[10px] font-medium uppercase tracking-widest text-muted">
+                        The Prompt
                       </span>
                     </div>
-                    <h2 className="text-2xl font-bold tracking-tight text-white leading-snug italic">
+                    <h2 className="text-2xl font-medium tracking-tight text-foreground leading-snug italic">
                       &quot;{turn.aiQuestion}&quot;
                     </h2>
                   </div>
 
                   <div
-                    className={`rounded-[32px] border border-white/10 ${theme.tint} p-8 relative`}
+                    className="rounded-[32px] border border-[color:var(--accent)]/20 bg-[color:var(--accent-light)] p-8 relative"
                   >
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center gap-3 mb-5">
                       <span
-                        className={`flex h-5 w-5 items-center justify-center rounded ${theme.bg} text-[10px] font-black text-black`}
+                        className="flex h-6 w-6 items-center justify-center rounded-md bg-[color:var(--accent)] font-heading text-[10px] font-medium text-background"
                       >
                         A
                       </span>
                       <span
-                        className={`text-[10px] font-black uppercase tracking-widest ${theme.text}`}
+                        className="font-heading text-[10px] font-medium uppercase tracking-widest text-[color:var(--accent)]"
                       >
                         Your Response
                       </span>
                     </div>
-                    <p className="text-lg leading-relaxed text-zinc-200 font-medium italic">
+                    <p className="text-lg leading-relaxed text-foreground font-medium">
                       &quot;{turn.userMockAnswer}&quot;
                     </p>
                   </div>
 
-                  <div className="flex-1 rounded-[32px] border border-white/5 bg-zinc-950 p-8 overflow-y-auto scrollbar-hide">
-                    <div className="grid grid-cols-2 gap-6 mb-8 border-b border-white/5 pb-8">
+                  <div className="flex-1 rounded-[32px] border border-divider bg-background p-8 shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8 border-b border-divider pb-8">
                       <div>
-                        <h4 className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase text-emerald-500 tracking-widest">
+                        <h4 className="mb-5 flex items-center gap-2 font-heading text-[10px] font-medium uppercase text-emerald-600 tracking-widest">
                           <CheckCircle2 className="h-4 w-4" /> Strengths
                         </h4>
-                        <ul className="space-y-2 text-sm text-zinc-400">
+                        <ul className="space-y-3 text-sm text-foreground/80">
                           {turn.feedback.strengths.map((s, i) => (
-                            <li key={i} className="flex gap-2">
-                              <span>•</span> {s}
+                            <li key={i} className="flex gap-3">
+                              <span className="text-emerald-500">•</span> {s}
                             </li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase text-red-500 tracking-widest">
-                          <AlertCircle className="h-4 w-4" /> Weaknesses
+                        <h4 className="mb-5 flex items-center gap-2 font-heading text-[10px] font-medium uppercase text-red-500 tracking-widest">
+                          <AlertCircle className="h-4 w-4" /> Areas to Improve
                         </h4>
-                        <ul className="space-y-2 text-sm text-zinc-400">
+                        <ul className="space-y-3 text-sm text-foreground/80">
                           {turn.feedback.weaknesses.map((w, i) => (
-                            <li key={i} className="flex gap-2">
-                              <span>•</span> {w}
+                            <li key={i} className="flex gap-3">
+                              <span className="text-red-500">•</span> {w}
                             </li>
                           ))}
                         </ul>
@@ -274,21 +302,21 @@ function FeedbackContent() {
                     </div>
 
                     <div className="pt-2">
-                      <h4 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase text-amber-500 tracking-widest">
+                      <h4 className="mb-6 flex items-center gap-2 font-heading text-[10px] font-medium uppercase text-[color:var(--accent)] tracking-widest">
                         <Lightbulb className="h-4 w-4" /> Suggested Benchmark
                       </h4>
-                      <div className="space-y-4">
+                      <div className="space-y-5">
                         {[
                           { l: "S", t: ideal?.idealSTAR.s },
                           { l: "T", t: ideal?.idealSTAR.t },
                           { l: "A", t: ideal?.idealSTAR.a },
                           { l: "R", t: ideal?.idealSTAR.r },
                         ].map((item, i) => (
-                          <div key={i} className="flex gap-4">
-                            <span className="text-[10px] font-black text-zinc-600 uppercase w-6 pt-1">
+                          <div key={i} className="flex gap-5">
+                            <span className="font-heading text-xs font-medium text-muted uppercase w-6 pt-1 text-center shrink-0">
                               {item.l}
                             </span>
-                            <p className="flex-1 text-[13px] leading-relaxed text-zinc-400 font-medium">
+                            <p className="flex-1 text-sm leading-relaxed text-muted font-medium">
                               {item.t}
                             </p>
                           </div>
@@ -300,9 +328,9 @@ function FeedbackContent() {
 
                 {/* RIGHT: ENLARGED STAR AUDIT */}
                 <div className="lg:col-span-5 flex flex-col gap-6">
-                  <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-10 h-full flex flex-col">
-                    <h3 className="mb-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-                      <Target className="h-5 w-5" /> Structure Integrity Audit
+                  <div className="rounded-[32px] border border-divider bg-background-alt p-8 lg:p-10 flex flex-col h-full">
+                    <h3 className="mb-10 flex items-center gap-3 font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted">
+                      <Target className="h-5 w-5 stroke-[1.5]" /> Structure Integrity Audit
                     </h3>
                     <div className="flex-1 space-y-6">
                       {[
@@ -333,36 +361,42 @@ function FeedbackContent() {
                       ].map((item) => (
                         <div
                           key={item.k}
-                          className={`group transition-all ${item.st === "detected" ? "opacity-100" : "opacity-30"}`}
+                          className={`group transition-all ${item.st === "detected" ? "opacity-100" : "opacity-50 grayscale"}`}
                         >
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-5">
                               <span
-                                className={`flex h-14 w-14 items-center justify-center rounded-2xl text-4xl font-black ${item.st === "detected" ? `bg-emerald-500 text-black shadow-lg shadow-emerald-500/20` : "bg-zinc-800 text-zinc-600"}`}
+                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-heading text-2xl font-medium ${
+                                  item.st === "detected" 
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
+                                    : "bg-background border border-divider text-muted"
+                                }`}
                               >
                                 {item.k}
                               </span>
                               <div>
-                                <h4 className="text-xl font-bold text-white">
+                                <h4 className="text-lg font-medium text-foreground">
                                   {item.l}
                                 </h4>
                                 <span
-                                  className={`text-[10px] font-black uppercase ${item.st === "detected" ? "text-emerald-500" : "text-zinc-600"}`}
+                                  className={`font-heading text-[10px] font-medium uppercase tracking-widest ${
+                                    item.st === "detected" ? "text-emerald-600" : "text-muted"
+                                  }`}
                                 >
-                                  {item.st === "detected"
-                                    ? "Detected"
-                                    : "Missing"}
+                                  {item.st === "detected" ? "Detected" : "Missing"}
                                 </span>
                               </div>
                             </div>
                             {item.st === "detected" ? (
-                              <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                              <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0" />
                             ) : (
-                              <XCircle className="h-6 w-6 text-zinc-800" />
+                              <XCircle className="h-6 w-6 text-divider shrink-0" />
                             )}
                           </div>
                           <p
-                            className={`pl-[80px] text-xs leading-relaxed ${item.st === "detected" ? "text-zinc-200 font-medium" : "text-zinc-500 italic"}`}
+                            className={`pl-[68px] text-sm leading-relaxed ${
+                              item.st === "detected" ? "text-foreground/80 font-medium" : "text-muted italic"
+                            }`}
                           >
                             {item.t}
                           </p>
@@ -370,41 +404,42 @@ function FeedbackContent() {
                       ))}
                     </div>
                     <div
-                      className={`mt-10 rounded-2xl border border-white/10 bg-white/5 p-6`}
+                      className="mt-10 rounded-2xl border border-[color:var(--accent)]/20 bg-[color:var(--accent-light)] p-8"
                     >
                       <div
-                        className={`text-[10px] font-black uppercase ${theme.text} mb-2`}
+                        className="font-heading text-[10px] font-medium uppercase tracking-widest text-[color:var(--accent)] mb-3"
                       >
-                        V-Coach Strategy
+                        Fluence Strategy
                       </div>
-                      <p className="text-sm leading-relaxed text-zinc-300 font-medium italic">
+                      <p className="text-base leading-relaxed text-foreground font-medium italic">
                         {ideal?.suggestion}
                       </p>
                     </div>
                   </div>
                 </div>
+
               </div>
             </section>
           );
         })}
 
         {/* FINAL SECTION */}
-        <section className="h-screen w-full flex shrink-0 snap-start items-center justify-center p-6 bg-[#050505]">
-          <div className="text-center">
-            <Sparkles className={`mx-auto h-16 w-16 ${theme.text} mb-8`} />
-            <h2 className="text-6xl font-black tracking-tighter mb-4 italic">
-              Done.
+        <section className="min-h-[80vh] w-full flex items-center justify-center p-6 bg-background-alt pt-24 pb-48">
+          <div className="text-center w-full max-w-lg">
+            <Sparkles className="mx-auto h-16 w-16 text-[color:var(--accent)] stroke-[1.5] mb-8" />
+            <h2 className="font-heading text-6xl md:text-7xl font-light tracking-tight mb-12 text-foreground">
+              Module Complete.
             </h2>
-            <div className="flex flex-col gap-4 max-w-xs mx-auto">
+            <div className="flex flex-col gap-4 w-full mx-auto">
               <Link
                 href={`/setup?slug=${data.slug}`}
-                className={`w-full rounded-full ${theme.bg} py-5 font-black uppercase tracking-widest text-black text-xs`}
+                className="cursor-start w-full rounded-full bg-[color:var(--accent)] py-4 font-heading text-sm font-medium uppercase tracking-widest text-background shadow-md hover:scale-105 active:scale-95 transition-all"
               >
                 Retake Session
               </Link>
               <Link
                 href="/interview-prep"
-                className="w-full rounded-full border border-white/10 py-5 font-black uppercase tracking-widest text-zinc-500 text-xs"
+                className="cursor-back w-full rounded-full border border-divider bg-background py-4 font-heading text-sm font-medium uppercase tracking-widest text-muted hover:border-[color:var(--accent)] hover:text-foreground transition-all"
               >
                 Dashboard
               </Link>
@@ -418,7 +453,7 @@ function FeedbackContent() {
 
 export default function FeedbackPage() {
   return (
-    <Suspense fallback={<div className="h-screen bg-black" />}>
+    <Suspense fallback={<div className="h-screen bg-background" />}>
       <FeedbackContent />
     </Suspense>
   );

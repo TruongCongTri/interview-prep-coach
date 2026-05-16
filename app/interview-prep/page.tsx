@@ -88,32 +88,39 @@ function PrepDashboardContent() {
   }, [visibleCount, filteredData.length]);
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-cyan-500/30">
+    <main 
+      className="min-h-screen bg-background text-foreground transition-colors duration-700 ease-in-out"
+      style={{
+        '--accent': activeMode === 'role' ? 'var(--accent-role)' : 'var(--accent-topic)',
+        '--accent-light': activeMode === 'role' ? 'var(--accent-role-light)' : 'var(--accent-topic-light)',
+      } as React.CSSProperties}
+    >
       <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
         {/* Hero Section */}
         <header className="mb-16 flex flex-col items-center text-center">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400"
+            className="mb-6 inline-flex items-center gap-2 font-heading text-sm font-medium uppercase tracking-[0.15em] text-accent transition-colors duration-500"
           >
-            <Sparkles className="h-3.5 w-3.5" />
-            V-Coach Intelligence
+            <Sparkles className="h-4 w-4" />
+            Fluence Intelligence
           </motion.div>
-          <h1 className="text-6xl font-extrabold tracking-tighter md:text-8xl">
-            Choose your <br /> focus.
+          <h1 className="font-heading text-6xl font-light tracking-tight md:text-8xl">
+            Choose your <br />
+            <span className="font-medium italic text-foreground">focus.</span>
           </h1>
         </header>
 
         {/* Search Bar (Synced) */}
-        <div className="relative mx-auto mb-16">
-          <Search className="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-600" />
+        <div className="cursor-search relative mx-auto mb-16 max-w-2xl">
+          <Search className="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
           <input
             type="text"
             placeholder="Search roles, topics, or stacks..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="w-full rounded-full border border-white/10 bg-white/[0.02] py-5 pl-14 pr-8 text-white backdrop-blur-md transition-all focus:border-cyan-500/50 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+            className="w-full rounded-full border border-divider bg-background-alt py-5 pl-14 pr-8 text-foreground transition-all focus:border-accent focus:bg-background focus:outline-none focus:ring-4 focus:ring-accent-light"
           />
         </div>
 
@@ -121,57 +128,52 @@ function PrepDashboardContent() {
         <div className="mb-12 grid gap-6 md:grid-cols-2">
           <button
             onClick={() => handleModeChange("role")}
-            className={`group relative flex flex-col items-start rounded-3xl border p-8 text-left transition-all duration-500 ${
+            className={`cursor-select group relative flex flex-col items-start rounded-3xl border p-8 text-left transition-all duration-500 ${
               activeMode === "role"
-                ? "border-cyan-500/40 bg-cyan-500/[0.02]"
-                : "border-white/5 bg-white/[0.01] hover:bg-white/[0.03]"
+                ? "border-[color:var(--accent-role)] bg-[color:var(--accent-role-light)] shadow-sm"
+                : "border-divider bg-background-alt hover:border-[color:var(--accent-role)]/50"
             }`}
           >
             <div
-              className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${activeMode === "role" ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-400" : "border-white/10 text-zinc-600"}`}
+              className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${
+                activeMode === "role" 
+                  ? "border-[color:var(--accent-role)]/30 bg-background text-[color:var(--accent-role)]" 
+                  : "border-divider text-muted group-hover:text-[color:var(--accent-role)]"
+              }`}
             >
-              <Briefcase className="h-6 w-6" />
+              <Briefcase className="h-6 w-6 stroke-[1.5]" />
             </div>
-            <h3 className="text-2xl font-bold tracking-tight">
+            <h3 className="font-heading text-2xl font-medium tracking-tight text-foreground">
               Mock Interview
             </h3>
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-muted">
               Immersive role-play for full engineering and business positions.
             </p>
-            {activeMode === "role" && (
-              <motion.div
-                layoutId="glow-bg"
-                className="absolute inset-0 rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.1)] pointer-events-none"
-              />
-            )}
           </button>
 
           <button
             onClick={() => handleModeChange("topic")}
-            className={`group relative flex flex-col items-start rounded-3xl border p-8 text-left transition-all duration-500 ${
+            className={`cursor-select group relative flex flex-col items-start rounded-3xl border p-8 text-left transition-all duration-500 ${
               activeMode === "topic"
-                ? "border-amber-500/40 bg-amber-500/[0.02]"
-                : "border-white/5 bg-white/[0.01] hover:bg-white/[0.03]"
+                ? "border-[color:var(--accent-topic)] bg-[color:var(--accent-topic-light)] shadow-sm"
+                : "border-divider bg-background-alt hover:border-[color:var(--accent-topic)]/50"
             }`}
           >
             <div
-              className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${activeMode === "topic" ? "border-amber-500/30 bg-amber-500/10 text-amber-400" : "border-white/10 text-zinc-600"}`}
+              className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors ${
+                activeMode === "topic" 
+                  ? "border-[color:var(--accent-topic)]/30 bg-background text-[color:var(--accent-topic)]" 
+                  : "border-divider text-muted group-hover:text-[color:var(--accent-topic)]"
+              }`}
             >
-              <Target className="h-6 w-6" />
+              <Target className="h-6 w-6 stroke-[1.5]" />
             </div>
-            <h3 className="text-2xl font-bold tracking-tight">
+            <h3 className="font-heading text-2xl font-medium tracking-tight text-foreground">
               Targeted Practice
             </h3>
-            <p className="mt-2 text-sm text-zinc-500">
-              Atomic drills focused on specific technologies or behavioral
-              skills.
+            <p className="mt-2 text-sm text-muted">
+              Atomic drills focused on specific technologies or behavioral skills.
             </p>
-            {activeMode === "topic" && (
-              <motion.div
-                layoutId="glow-bg"
-                className="absolute inset-0 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.1)] pointer-events-none"
-              />
-            )}
           </button>
         </div>
 
@@ -179,9 +181,8 @@ function PrepDashboardContent() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 min-h-[400px]">
           <AnimatePresence mode="popLayout">
             {itemsToShow.map((item) => {
-              // Determine theme based on type
               const isRole = item.type === "role";
-              const themeColor = isRole ? "cyan" : "amber";
+              const cardAccentVar = isRole ? 'var(--accent-role)' : 'var(--accent-topic)';
 
               return (
                 <motion.div
@@ -191,33 +192,22 @@ function PrepDashboardContent() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
+                  style={{ '--card-accent': cardAccentVar } as React.CSSProperties}
                 >
                   <Link
                     href={`/interview-prep/${item.slug}`}
-                    className={`group block h-full rounded-2xl border border-white/5 bg-[#09090B] p-6 backdrop-blur-md transition-all hover:border-${themeColor}-500/20 hover:bg-zinc-900`}
+                    className="cursor-view group flex flex-col h-full rounded-2xl border border-divider bg-background-alt p-6 transition-all hover:border-[color:var(--card-accent)] hover:bg-background hover:shadow-sm"
                   >
                     <div className="mb-6 flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-700 group-hover:text-zinc-500 transition-colors">
+                      <span className="font-heading text-xs font-medium uppercase tracking-[0.15em] text-muted group-hover:text-foreground transition-colors">
                         {item.category}
                       </span>
                       {/* Dynamic Dot Color */}
-                      <div
-                        className={`h-2 w-2 rounded-full bg-zinc-800 transition-colors ${
-                          isRole
-                            ? "group-hover:bg-cyan-500"
-                            : "group-hover:bg-amber-500"
-                        }`}
-                      />
+                      <div className="h-2 w-2 rounded-full bg-divider transition-colors group-hover:bg-[color:var(--card-accent)]" />
                     </div>
 
                     {/* Dynamic Title Color */}
-                    <h4
-                      className={`text-xl font-bold tracking-tight text-white transition-colors ${
-                        isRole
-                          ? "group-hover:text-cyan-400"
-                          : "group-hover:text-amber-400"
-                      }`}
-                    >
+                    <h4 className="font-heading text-2xl font-medium tracking-tight text-foreground transition-colors group-hover:text-[color:var(--card-accent)]">
                       {item.title}
                     </h4>
 
@@ -225,25 +215,16 @@ function PrepDashboardContent() {
                       {item.skills.slice(0, 3).map((skill) => (
                         <span
                           key={skill}
-                          className="rounded-md border border-white/5 bg-white/[0.02] px-2 py-1 text-[10px] font-bold uppercase text-zinc-500"
+                          className="rounded-md border border-divider bg-background px-2 py-1 font-heading text-xs font-medium uppercase text-muted"
                         >
                           {skill}
                         </span>
                       ))}
                     </div>
 
-                    <div
-                      className={`mt-12 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 transition-all group-hover:text-white`}
-                    >
+                    <div className="mt-auto pt-12 flex items-center justify-between font-heading text-[10px] font-medium uppercase tracking-widest text-muted transition-all group-hover:text-foreground">
                       Initialize Module
-                      {/* Dynamic Arrow Color */}
-                      <ChevronRight
-                        className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${
-                          isRole
-                            ? "group-hover:text-cyan-400"
-                            : "group-hover:text-amber-400"
-                        }`}
-                      />
+                      <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:text-[color:var(--card-accent)]" />
                     </div>
                   </Link>
                 </motion.div>
@@ -258,18 +239,18 @@ function PrepDashboardContent() {
           className="mt-16 flex flex-col items-center justify-center gap-4 py-10"
         >
           {isLoadingMore && (
-            <div className="flex items-center gap-3 text-cyan-500">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-[10px] font-black uppercase tracking-widest">
-                Scanning data...
+            <div className="flex items-center gap-3 text-accent transition-colors">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="font-heading text-xs font-medium uppercase tracking-widest">
+                Scanning library...
               </span>
             </div>
           )}
           {!isLoadingMore &&
             visibleCount >= filteredData.length &&
             filteredData.length > 0 && (
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-800">
-                Module library complete
+              <p className="font-heading text-xs font-medium uppercase tracking-[0.2em] text-divider border-t border-divider pt-8 w-32 text-center">
+                End of list
               </p>
             )}
         </div>
@@ -281,7 +262,7 @@ function PrepDashboardContent() {
 // Wrapper for Suspense (required for useSearchParams)
 export default function InterviewPrepPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
       <PrepDashboardContent />
     </Suspense>
   );

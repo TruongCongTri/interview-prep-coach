@@ -1,28 +1,30 @@
 // Root Layout: Header, Footer, Font, Providers
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layouts/Header";
 import Footer from "@/components/layouts/Footer";
 import NextTopLoader from "nextjs-toploader";
 import { env } from "@/lib/env";
+import {CustomCursor} from "@/components/ui/CustomCursor";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
-// config-6 -  Base Metadata & OpenGraph
+// Base Metadata & OpenGraph
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_URL),
   title: {
-    default: "V-Coach | AI Interview Simulator", // Trang chủ sẽ có title này
-    template: "%s | AI Interview Simulator", // Khi trang con cài title "Khóa React", nó sẽ ra "Khóa React | Boilerplate Next.js 13"
+    default: "Fluence | Global Interview Simulator",
+    template: "%s | Fluence",
   },
   description:
     "Master the global interview with a patient, culturally-aware AI.",
   openGraph: {
     type: "website",
-    locale: "vi_VN",
+    locale: "en_US",
     url: env.NEXT_PUBLIC_URL,
-    siteName: "V-Coach | AI Interview Simulator",
+    siteName: "Fluence | AI Interview Simulator",
     images: [{ url: "/images/default-og-cover.jpg", width: 1200, height: 630 }],
   },
 };
@@ -33,10 +35,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-slate-900 text-slate-50 min-h-screen flex flex-col antialiased`}>
+    <html lang="en" className="light">
+      <body 
+        className={`${dmSans.variable} ${outfit.variable} font-body bg-background text-foreground min-h-screen flex flex-col antialiased`}
+      >
         <NextTopLoader
-          color="#26C6DA"
+          color="#C89B7B" // Soft clay accent
           initialPosition={0.08}
           crawlSpeed={200}
           height={3}
@@ -45,12 +49,12 @@ export default function RootLayout({
           easing="ease"
           speed={200}
         />
-        {/* Sẽ bọc ReactQueryProvider ở đây trong thực tế */}
+        <CustomCursor /> 
+        {/* ReactQueryProvider here */}
         <Header />
         <main className="flex-1 flex flex-col">{children}</main>
         <Footer />
       </body>
     </html>
-    
   );
 }
