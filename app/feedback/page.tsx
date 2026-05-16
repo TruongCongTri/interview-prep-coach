@@ -20,8 +20,13 @@ import { INTERVIEW_DATA } from "@/lib/mock-data";
 
 function FeedbackContent() {
   const searchParams = useSearchParams();
+  
+  // 1. CATCH ALL QUERY PARAMETERS
   const slug = searchParams.get("slug");
   const indicesParam = searchParams.get("indices");
+  const level = searchParams.get("lv") || "Mid-Level";
+  const mode = searchParams.get("mode") || "role";
+
   const data = INTERVIEW_DATA.find((item) => item.slug === slug);
 
   const [activeTurnIndex, setActiveTurnIndex] = useState(0);
@@ -88,7 +93,7 @@ function FeedbackContent() {
         '--accent-light': isRole ? 'var(--accent-role-light)' : 'var(--accent-topic-light)',
       } as React.CSSProperties}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 pt-25">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 pt-24">
         <Link
           href="/interview-prep"
           className="cursor-back group flex items-center gap-3 text-sm font-medium text-muted hover:text-foreground transition-colors"
@@ -99,12 +104,11 @@ function FeedbackContent() {
           Back to Library
         </Link>
         <div
-          className="rounded-full border border-[color:var(--accent)]/30 bg-[color:var(--accent-light)] px-4 py-1.5 font-heading text-[10px] font-medium uppercase tracking-widest text-[color:var(--accent)]"
+          className="rounded-full border border-[color:var(--accent)]/30 bg-[color:var(--accent-light)] px-4 py-1.5 font-heading text-[10px] font-medium uppercase tracking-widest text-[color:var(--accent)] flex items-center gap-2"
         >
-          {data.title} Assessment
+          {data.title} <span className="opacity-50">|</span> {level} Level
         </div>
       </div>
-
 
       {/* --- FLOATING NAVIGATION DOCK --- */}
       <div className="fixed bottom-10 left-1/2 z-[50] -translate-x-1/2">
@@ -199,7 +203,7 @@ function FeedbackContent() {
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
               <div className="text-left w-full">
                 <h1 className="font-heading text-xs font-medium uppercase tracking-[0.2em] text-muted mb-6">
-                  Assessment Complete
+                  {mode === "role" ? "Mock Interview Complete" : "Targeted Practice Complete"}
                 </h1>
                 <div className="flex items-baseline gap-2">
                   <span className="text-9xl font-light tracking-tighter leading-none text-[color:var(--accent)]">
@@ -207,8 +211,11 @@ function FeedbackContent() {
                   </span>
                   <span className="text-2xl font-medium text-muted">/100</span>
                 </div>
-                <h2 className="mt-8 font-heading text-4xl font-medium text-foreground">
+                <h2 className="mt-8 font-heading text-4xl font-medium text-foreground flex items-center gap-4">
                   {data.title}
+                  <span className="text-xl font-light text-muted bg-background px-4 py-1.5 rounded-full border border-divider">
+                    {level}
+                  </span>
                 </h2>
                 <button
                   onClick={() => scrollToSection(1)}
@@ -303,7 +310,7 @@ function FeedbackContent() {
 
                     <div className="pt-2">
                       <h4 className="mb-6 flex items-center gap-2 font-heading text-[10px] font-medium uppercase text-[color:var(--accent)] tracking-widest">
-                        <Lightbulb className="h-4 w-4" /> Suggested Benchmark
+                        <Lightbulb className="h-4 w-4" /> {level} Benchmark Standard
                       </h4>
                       <div className="space-y-5">
                         {[
@@ -412,6 +419,11 @@ function FeedbackContent() {
                         Fluence Strategy
                       </div>
                       <p className="text-base leading-relaxed text-foreground font-medium italic">
+                        {/* Dynamic Pseudo-Context to make the static data feel alive */}
+                        {level === "Senior" || level === "Lead" || level === "Manager" 
+                          ? `At the ${level} level, expectations go beyond task execution. Focus on strategic business impact. `
+                          : `As a ${level} candidate, focus on demonstrating clear task execution and learning agility. `
+                        }
                         {ideal?.suggestion}
                       </p>
                     </div>
@@ -431,8 +443,9 @@ function FeedbackContent() {
               Module Complete.
             </h2>
             <div className="flex flex-col gap-4 w-full mx-auto">
+              {/* Pass the exact same setup parameters back to the setup page for easy retrying */}
               <Link
-                href={`/setup?slug=${data.slug}`}
+                href={`/setup?slug=${data.slug}&mode=${mode}&lv=${level}`}
                 className="cursor-start w-full rounded-full bg-[color:var(--accent)] py-4 font-heading text-sm font-medium uppercase tracking-widest text-background shadow-md hover:scale-105 active:scale-95 transition-all"
               >
                 Retake Session
