@@ -47,7 +47,12 @@ function InterviewContent() {
   const [sessionPhase, setSessionPhase] = useState<"setup" | "active">("setup");
   const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
   const [aiState, setAiState] = useState<AIState>("speaking");
+
+  // Pause/Think State
   const [isThinking, setIsThinking] = useState(false);
+  const [thinkTimeLeft, setThinkTimeLeft] = useState(20);
+  const [hasUsedPauseThisTurn, setHasUsedPauseThisTurn] = useState(false);
+
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [timer, setTimer] = useState(0);
   const [transcript, setTranscript] = useState<
@@ -81,7 +86,7 @@ function InterviewContent() {
     }
   };
 
-  // 1. Calculate Total Seconds for the session
+  // 3. Calculate Total Seconds for the session
   const totalSeconds = useMemo(() => {
     if (mode === "topic") {
       return parseInt(qParam) * 300;
@@ -89,10 +94,10 @@ function InterviewContent() {
     return parseInt(dur) * 60;
   }, [mode, dur, qParam]);
 
-  // 2. States for tracking time
+  // 4. States for tracking time
   const [elapsedTime, setElapsedTime] = useState(0);
 
-  // 3. Timer Effect
+  // 5. Global Timer Effect
   useEffect(() => {
     if (sessionPhase !== "active" || isFinished || isThinking) return;
 
@@ -109,7 +114,30 @@ function InterviewContent() {
     return () => clearInterval(interval);
   }, [sessionPhase, isFinished, isThinking, totalSeconds]);
 
-  // 4. Time Formatting Helper
+  // 6. Pause Countdown Timer Effect
+  useEffect(() => {
+    if (!isThinking) return;
+
+    const interval = setInterval(() => {
+      setThinkTimeLeft((prev) => {
+        // When we hit 1, the next tick is 0. Time to stop!
+        if (prev <= 1) {
+          clearInterval(interval);
+          // Use setTimeout to safely trigger state updates outside the render loop
+          setTimeout(() => {
+            setIsThinking(false);
+            setHasUsedPauseThisTurn(true);
+          }, 0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isThinking]);
+
+  // 7. Time Formatting Helper
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -118,7 +146,7 @@ function InterviewContent() {
 
   const remainingTime = Math.max(0, totalSeconds - elapsedTime);
 
-  // 3. LAZY INITIALIZER: Randomize and Slice
+  // 8. LAZY INITIALIZER: Randomize and Slice
   const [sessionConversation] = useState<ConversationTurn[]>(() => {
     if (!data) return [];
 
@@ -152,7 +180,11 @@ function InterviewContent() {
   }, [transcript]);
 
   if (!data)
-    return <div className="text-foreground bg-background text-center p-20 min-h-screen">Invalid Session</div>;
+    return (
+      <div className="text-foreground bg-background text-center p-20 min-h-screen">
+        Invalid Session
+      </div>
+    );
 
   const isRole = data.type === "role";
 
@@ -183,7 +215,11 @@ function InterviewContent() {
   };
 
   const handleNextTurn = () => {
-    if (isThinking) return;
+    // 1. Force reset all Pause/Think states for the new turn
+    setIsThinking(false);
+    setHasUsedPauseThisTurn(false);
+    setThinkTimeLeft(20);
+
     const currentTurn = sessionConversation[currentTurnIndex];
 
     setAiState("listening");
@@ -213,6 +249,20 @@ function InterviewContent() {
     }, 3000);
   };
 
+  const togglePause = () => {
+    if (hasUsedPauseThisTurn && !isThinking) return; // Locked out if already used
+
+    if (!isThinking) {
+      // Start pausing
+      setIsThinking(true);
+      setThinkTimeLeft(20);
+    } else {
+      // Resuming early
+      setIsThinking(false);
+      setHasUsedPauseThisTurn(true);
+    }
+  };
+
   const handleSkipToFinish = () => {
     finishSession();
   };
@@ -222,12 +272,16 @@ function InterviewContent() {
 
   if (sessionPhase === "setup") {
     return (
-      <main 
+      <main
         className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground"
-        style={{
-          '--accent': isRole ? 'var(--accent-role)' : 'var(--accent-topic)',
-          '--accent-light': isRole ? 'var(--accent-role-light)' : 'var(--accent-topic-light)',
-        } as React.CSSProperties}
+        style={
+          {
+            "--accent": isRole ? "var(--accent-role)" : "var(--accent-topic)",
+            "--accent-light": isRole
+              ? "var(--accent-role-light)"
+              : "var(--accent-topic-light)",
+          } as React.CSSProperties
+        }
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -262,8 +316,8 @@ function InterviewContent() {
               <div
                 key={i}
                 className={`flex items-center justify-between rounded-2xl border p-5 transition-colors ${
-                  p.state === "denied" 
-                    ? "border-red-500/50 bg-red-50 text-red-600" 
+                  p.state === "denied"
+                    ? "border-red-500/50 bg-red-50 text-red-600"
                     : "border-divider bg-background text-foreground"
                 }`}
               >
@@ -276,8 +330,8 @@ function InterviewContent() {
                 <button
                   onClick={() => p.set("granted")}
                   className={`cursor-select rounded-full px-6 py-2 font-heading text-xs font-medium uppercase tracking-widest transition-colors ${
-                    p.state === "granted" 
-                      ? "bg-[color:var(--accent-light)] text-[color:var(--accent)]" 
+                    p.state === "granted"
+                      ? "bg-[color:var(--accent-light)] text-[color:var(--accent)]"
                       : "bg-foreground text-background hover:scale-105 active:scale-95"
                   }`}
                 >
@@ -290,8 +344,8 @@ function InterviewContent() {
             disabled={!allGranted}
             onClick={startInterview}
             className={`cursor-start mt-10 w-full rounded-full py-4 font-heading text-sm font-medium uppercase tracking-widest transition-all ${
-              allGranted 
-                ? "bg-[color:var(--accent)] text-background shadow-md hover:scale-[1.02] active:scale-95" 
+              allGranted
+                ? "bg-[color:var(--accent)] text-background shadow-md hover:scale-[1.02] active:scale-95"
                 : "bg-divider text-muted cursor-not-allowed"
             }`}
           >
@@ -304,15 +358,15 @@ function InterviewContent() {
 
   if (isFinished) {
     return (
-      <main 
+      <main
         className="fixed inset-0 z-[200] flex items-center justify-center bg-background text-foreground"
-        style={{
-          '--accent': isRole ? 'var(--accent-role)' : 'var(--accent-topic)',
-        } as React.CSSProperties}
+        style={
+          {
+            "--accent": isRole ? "var(--accent-role)" : "var(--accent-topic)",
+          } as React.CSSProperties
+        }
       >
-        <div
-          className="absolute h-[600px] w-[600px] rounded-full opacity-20 blur-[150px] bg-[color:var(--accent)] pointer-events-none"
-        />
+        <div className="absolute h-[600px] w-[600px] rounded-full opacity-20 blur-[150px] bg-[color:var(--accent)] pointer-events-none" />
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -324,9 +378,7 @@ function InterviewContent() {
             transition={{ delay: 0.2 }}
             className="mb-8 flex justify-center"
           >
-            <div
-              className="rounded-full border border-divider bg-background-alt p-8 shadow-sm"
-            >
+            <div className="rounded-full border border-divider bg-background-alt p-8 shadow-sm">
               <Sparkles className="h-10 w-10 text-[color:var(--accent)] stroke-[1.5]" />
             </div>
           </motion.div>
@@ -361,58 +413,96 @@ function InterviewContent() {
     <main
       ref={containerRef}
       className="fixed inset-0 z-[9999] bg-background overflow-hidden flex h-screen w-full text-foreground"
-      style={{
-        '--accent': isRole ? 'var(--accent-role)' : 'var(--accent-topic)',
-        '--accent-light': isRole ? 'var(--accent-role-light)' : 'var(--accent-topic-light)',
-      } as React.CSSProperties}
+      style={
+        {
+          "--accent": isRole ? "var(--accent-role)" : "var(--accent-topic)",
+          "--accent-light": isRole
+            ? "var(--accent-role-light)"
+            : "var(--accent-topic-light)",
+        } as React.CSSProperties
+      }
     >
       <div className="relative flex flex-1 flex-col justify-between p-6 md:p-8">
-        
-        {/* HEADER CONTROLS */}
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-4 rounded-full border border-divider bg-background-alt/80 px-6 py-3 backdrop-blur-md shadow-sm">
-            {/* Countdown Pulse */}
-            <div
-              className={`h-2.5 w-2.5 rounded-full ${remainingTime < 60 ? "bg-red-500 animate-ping" : "bg-[color:var(--accent)] animate-pulse"}`}
-            />
+        <div className="w-full">
+          {/* HEADER CONTROLS */}
+          <header className="flex items-center justify-between">
+            <div className="flex items-center gap-4 rounded-full border border-divider bg-background-alt/80 px-6 py-3 backdrop-blur-md shadow-sm">
+              {/* Countdown Pulse */}
+              <div
+                className={`h-2.5 w-2.5 rounded-full ${remainingTime < 60 ? "bg-red-500 animate-ping" : "bg-[color:var(--accent)] animate-pulse"}`}
+              />
 
-            <div className="flex items-baseline gap-1.5 font-mono">
-              {/* Remaining Time */}
-              <span
-                className={`text-sm font-medium tracking-widest ${remainingTime < 60 ? "text-red-500" : "text-foreground"}`}
-              >
-                {formatTime(remainingTime)}
-              </span>
+              <div className="flex items-baseline gap-1.5 font-mono">
+                {/* Remaining Time */}
+                <span
+                  className={`text-sm font-medium tracking-widest ${remainingTime < 60 ? "text-red-500" : "text-foreground"}`}
+                >
+                  {formatTime(remainingTime)}
+                </span>
 
-              {/* Separator / Total Time */}
-              <span className="text-xs text-muted/50">/</span>
-              <span className="text-xs font-medium text-muted">
-                {formatTime(totalSeconds)}
-              </span>
+                {/* Separator / Total Time */}
+                <span className="text-xs text-muted/50">/</span>
+                <span className="text-xs font-medium text-muted">
+                  {formatTime(totalSeconds)}
+                </span>
+              </div>
+
+              <span className="h-4 w-px bg-divider mx-2" />
+
+              {/* Context Label */}
+              <div className="flex flex-col">
+                <span className="font-heading text-[9px] font-medium uppercase tracking-widest text-muted leading-none mb-1">
+                  {mode === "role" ? "Session Duration" : "Estimated Time"}
+                </span>
+                <span className="font-heading text-[11px] font-medium uppercase tracking-wider text-foreground leading-none">
+                  {data.title}
+                </span>
+              </div>
             </div>
 
-            <span className="h-4 w-px bg-divider mx-2" />
+            <button
+              onClick={() => router.push("/interview-prep")}
+              className="cursor-back flex items-center gap-2 font-heading text-[10px] font-medium uppercase tracking-widest text-muted hover:text-foreground transition-all"
+            >
+              Terminate
+              <XCircle className="h-4 w-4 text-muted group-hover:text-red-500 transition-colors" />
+            </button>
+          </header>
 
-            {/* Context Label */}
-            <div className="flex flex-col">
-              <span className="font-heading text-[9px] font-medium uppercase tracking-widest text-muted leading-none mb-1">
-                {mode === "role" ? "Session Duration" : "Estimated Time"}
-              </span>
-              <span className="font-heading text-[11px] font-medium uppercase tracking-wider text-foreground leading-none">
-                {data.title}
-              </span>
-            </div>
+          {/* PROGRESS INDICATOR */}
+          <div className="w-full max-w-2xl mx-auto mt-8 flex items-center justify-center gap-2 px-4">
+            {sessionConversation.map((turn, idx) => {
+              const isActive = idx === currentTurnIndex;
+              const isPast = idx < currentTurnIndex;
+              return (
+                <div
+                  key={turn.id}
+                  className="group relative flex-1 h-1.5 rounded-full bg-divider transition-colors"
+                >
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${isActive ? "bg-[color:var(--accent)] w-full" : isPast ? "bg-[color:var(--accent-light)] w-full" : "w-0"}`}
+                  />
+
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-48 invisible opacity-0 translate-y-2 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 z-50">
+                    <div className="rounded-xl border border-divider bg-background p-3 shadow-lg text-center relative">
+                      <span className="block font-heading text-[9px] font-medium uppercase tracking-widest text-[color:var(--accent)] mb-1">
+                        {mode === "topic"
+                          ? "Topic Question"
+                          : `Turn ${idx + 1}`}
+                      </span>
+                      <p className="text-xs text-foreground/80 line-clamp-3">
+                        {turn.aiQuestion}
+                      </p>
+                      {/* Tooltip Arrow */}
+                      <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-b border-r border-divider bg-background" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-
-          <button
-            onClick={() => router.push("/interview-prep")}
-            className="cursor-back flex items-center gap-2 font-heading text-[10px] font-medium uppercase tracking-widest text-muted hover:text-foreground transition-all"
-          >
-            Terminate
-            <XCircle className="h-4 w-4 text-muted group-hover:text-red-500 transition-colors" />
-          </button>
-        </header>
-
+        </div>
         {/* AI ORB VISUALIZATION */}
         <div className="flex flex-col items-center justify-center">
           <motion.div
@@ -427,12 +517,12 @@ function InterviewContent() {
             }
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             className={`relative flex h-48 w-48 items-center justify-center rounded-full border-[8px] transition-all duration-700 ${
-              isThinking 
-                ? "border-muted/20" 
-                : aiState === "speaking" 
-                  ? "border-[color:var(--accent)] shadow-[0_0_40px_var(--accent-light)]" 
-                  : aiState === "processing" 
-                    ? "border-divider border-t-[color:var(--accent)]" 
+              isThinking
+                ? "border-muted/20"
+                : aiState === "speaking"
+                  ? "border-[color:var(--accent)] shadow-[0_0_40px_var(--accent-light)]"
+                  : aiState === "processing"
+                    ? "border-divider border-t-[color:var(--accent)]"
                     : "border-divider"
             }`}
           >
@@ -452,24 +542,39 @@ function InterviewContent() {
           <button
             onClick={() => setIsMicMuted(!isMicMuted)}
             className={`cursor-mute flex h-14 w-14 items-center justify-center rounded-full border transition-all ${
-              isMicMuted 
-                ? "border-red-500/50 bg-red-50 text-red-600 shadow-sm" 
+              isMicMuted
+                ? "border-red-500/50 bg-red-50 text-red-600 shadow-sm"
                 : "border-divider bg-background text-foreground hover:bg-background-alt"
             }`}
           >
-            {isMicMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            {isMicMuted ? (
+              <MicOff className="h-5 w-5" />
+            ) : (
+              <Mic className="h-5 w-5" />
+            )}
           </button>
           <button
-            onClick={() => setIsThinking(!isThinking)}
-            className={`cursor-think flex items-center gap-3 px-8 py-4 rounded-full border transition-all ${
-              isThinking 
-                ? "border-muted bg-muted text-background shadow-md" 
-                : "border-divider bg-background text-foreground hover:bg-background-alt"
+            onClick={togglePause}
+            disabled={hasUsedPauseThisTurn && !isThinking}
+            className={`cursor-think flex items-center justify-center gap-3 px-8 py-4 rounded-full border transition-all duration-300 ${
+              isThinking
+                ? thinkTimeLeft <= 5
+                  ? "border-red-500 bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse"
+                  : "border-muted bg-muted text-background shadow-md"
+                : hasUsedPauseThisTurn
+                  ? "border-divider bg-background-alt text-muted/50 cursor-not-allowed"
+                  : "border-divider bg-background text-foreground hover:bg-background-alt"
             }`}
           >
-            <Brain className="h-5 w-5 stroke-[1.5]" />
-            <span className="font-heading text-sm font-medium uppercase tracking-wider">
-              {isThinking ? "Resume Session" : "Pause to Think"}
+            <Brain
+              className={`h-5 w-5 stroke-[1.5] ${isThinking && thinkTimeLeft <= 5 ? "animate-bounce" : ""}`}
+            />
+            <span className="font-heading text-sm font-medium uppercase tracking-wider w-[140px] shrink-0 text-center whitespace-nowrap tabular-nums">
+              {isThinking
+                ? `Resume (${thinkTimeLeft}s)`
+                : hasUsedPauseThisTurn
+                  ? "Used"
+                  : "Pause"}
             </span>
           </button>
           <button
@@ -507,8 +612,8 @@ function InterviewContent() {
               </span>
               <div
                 className={`max-w-[90%] text-base leading-relaxed p-5 rounded-2xl ${
-                  msg.speaker === "ai" 
-                    ? "bg-background border border-divider text-foreground" 
+                  msg.speaker === "ai"
+                    ? "bg-background border border-divider text-foreground"
                     : "bg-[color:var(--accent-light)] border border-[color:var(--accent)]/20 text-foreground font-medium"
                 }`}
               >

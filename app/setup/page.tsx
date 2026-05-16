@@ -11,6 +11,7 @@ import {
   Sparkles,
   Settings2,
   Layers,
+  Info,
 } from "lucide-react";
 
 import { INTERVIEW_DATA, EntryType } from "@/lib/mock-data";
@@ -122,9 +123,7 @@ function SetupContent() {
         } as React.CSSProperties
       }
     >
-
       <div className="mx-auto pt-32 max-w-6xl px-6">
-
         <header className="mb-12">
           <Link
             href="/interview-prep"
@@ -212,7 +211,7 @@ function SetupContent() {
                     <button
                       key={skill}
                       onClick={() => toggleSkill(skill)}
-                      className={`rounded-full border px-5 py-2 text-sm font-medium transition-all duration-300 ${
+                      className={`cursor-select rounded-full border px-5 py-2 text-sm font-medium transition-all duration-300 ${
                         selectedSkills.includes(skill)
                           ? "border-accent bg-accent-light text-foreground shadow-sm"
                           : "border-divider bg-transparent text-muted hover:border-accent/50 hover:text-foreground"
@@ -337,6 +336,12 @@ function SetupContent() {
             </div>
           </div>
         </div>
+      </div>
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 rounded-full border border-[color:var(--accent)]/20 bg-background/90 backdrop-blur-md px-6 py-3 shadow-md pointer-events-none">
+        <Info className="h-4 w-4 text-[color:var(--accent)] stroke-[2]" />
+        <span className="font-heading text-[10px] font-medium uppercase tracking-widest text-muted whitespace-nowrap">
+          This is a Demo. No AI agent is used.
+        </span>
       </div>
     </main>
   );

@@ -6,7 +6,9 @@ import Header from "@/components/layouts/Header";
 import Footer from "@/components/layouts/Footer";
 import NextTopLoader from "nextjs-toploader";
 import { env } from "@/lib/env";
-import {CustomCursor} from "@/components/ui/CustomCursor";
+import { CustomCursor } from "@/components/ui/CustomCursor";
+import { Info } from "lucide-react";
+import DemoBubble from "@/components/ui/DemoBubble";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -36,7 +38,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="light">
-      <body 
+      <body
         className={`${dmSans.variable} ${outfit.variable} font-body bg-background text-foreground min-h-screen flex flex-col antialiased`}
       >
         <NextTopLoader
@@ -49,8 +51,8 @@ export default function RootLayout({
           easing="ease"
           speed={200}
         />
-        <CustomCursor /> 
-        {/* ReactQueryProvider here */}
+        <CustomCursor />
+        <DemoBubble />
         <Header />
         <main className="flex-1 flex flex-col">{children}</main>
         <Footer />

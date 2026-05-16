@@ -107,7 +107,7 @@ function FeedbackContent() {
 
 
       {/* --- FLOATING NAVIGATION DOCK --- */}
-      <div className="fixed bottom-10 left-1/2 z-[100] -translate-x-1/2">
+      <div className="fixed bottom-10 left-1/2 z-[50] -translate-x-1/2">
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -116,7 +116,7 @@ function FeedbackContent() {
           {/* Previous Section Button */}
           <button
             onClick={() => scrollToSection(Math.max(0, activeTurnIndex - 1))}
-            className="cursor-view flex h-10 w-10 items-center justify-center rounded-full hover:bg-background-alt transition-colors disabled:opacity-30"
+            className="cursor-backward flex h-10 w-10 items-center justify-center rounded-full hover:bg-background-alt transition-colors disabled:opacity-30"
             disabled={activeTurnIndex === 0}
           >
             <ChevronUp className="h-4 w-4 text-muted" />
@@ -126,7 +126,7 @@ function FeedbackContent() {
             {/* 1. Hero Dot (Index 0) */}
             <button
               onClick={() => scrollToSection(0)}
-              className={`cursor-goto h-2.5 w-2.5 rounded-full transition-all ${
+              className={`cursor-backward h-2.5 w-2.5 rounded-full transition-all ${
                 activeTurnIndex === 0 
                   ? "bg-[color:var(--accent)] scale-110" 
                   : "bg-divider hover:bg-[color:var(--accent)]/50"
@@ -138,7 +138,7 @@ function FeedbackContent() {
               <button
                 key={i}
                 onClick={() => scrollToSection(i + 1)}
-                className={`cursor-backward h-2.5 w-2.5 rounded-full transition-all ${
+                className={`cursor-goto h-2.5 w-2.5 rounded-full transition-all ${
                   activeTurnIndex === i + 1 
                     ? "bg-[color:var(--accent)] scale-110" 
                     : "bg-divider hover:bg-[color:var(--accent)]/50"
@@ -149,7 +149,7 @@ function FeedbackContent() {
             {/* 3. Final CTA Dot (Index N + 1) */}
             <button
               onClick={() => scrollToSection(sessionConversation.length + 1)}
-              className={`cursor-forward h-2.5 w-2.5 rounded-full transition-all ${
+              className={`cursor-goto h-2.5 w-2.5 rounded-full transition-all ${
                 activeTurnIndex === sessionConversation.length + 1 
                   ? "bg-[color:var(--accent)] scale-110" 
                   : "bg-divider hover:bg-[color:var(--accent)]/50"
@@ -182,7 +182,7 @@ function FeedbackContent() {
                 Math.min(sessionConversation.length + 1, activeTurnIndex + 1),
               )
             }
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-background-alt transition-colors disabled:opacity-30"
+            className="cursor-forward flex h-10 w-10 items-center justify-center rounded-full hover:bg-background-alt transition-colors disabled:opacity-30"
             disabled={activeTurnIndex === sessionConversation.length + 1}
           >
             <ChevronDown className="h-4 w-4 text-muted" />
