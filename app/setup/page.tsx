@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -40,6 +40,28 @@ function SetupContent() {
   const [questionCount, setQuestionCount] = useState(
     searchParams.get("q") || "3",
   );
+
+  // ─── Sync all state whenever URL search params change ───────────────────────
+  // Without these effects, useState initializes once on mount and goes stale
+  // when the URL is updated externally (back/forward nav, router.replace, etc.)
+
+  useEffect(() => {
+    setSetupMode(modeParam);
+  }, [modeParam]);
+
+  useEffect(() => {
+    const entry =
+      INTERVIEW_DATA.find((i) => i.slug === slugParam) || INTERVIEW_DATA[0];
+    setSelectedEntry(entry);
+    setSelectedSkills(entry.skills);
+  }, [slugParam]);
+
+  useEffect(() => {
+    setSeniority(searchParams.get("lv") || "Mid-Level");
+    setDuration(searchParams.get("dur") || "30m");
+    setQuestionCount(searchParams.get("q") || "3");
+  }, [searchParams]);
+  // ────────────────────────────────────────────────────────────────────────────
 
   const SENIORITY_LEVELS = ["Junior", "Mid-Level", "Senior", "Lead", "Manager"];
   const DURATIONS = ["15m", "30m", "45m", "60m"];
@@ -92,6 +114,7 @@ function SetupContent() {
 
   const activeEntries = INTERVIEW_DATA.filter((i) => i.type === setupMode);
 
+  // Inside SetupContent component + sid timestamp to force remount of InterviewPage and re-initialization of AI agent
   const handleInitialize = () => {
     const params = new URLSearchParams();
     params.set("slug", selectedEntry.slug);
@@ -104,6 +127,9 @@ function SetupContent() {
       params.set("q", questionCount);
     }
 
+    // Add Session ID (sid) cache buster
+    params.set("sid", Date.now().toString());
+
     router.push(`/interview?${params.toString()}`);
   };
 
@@ -112,8 +138,6 @@ function SetupContent() {
       className="min-h-screen bg-background text-foreground pb-24 transition-colors duration-700 ease-in-out"
       style={
         {
-          // DYNAMIC CSS VARIABLE SWAP:
-          // This instantly changes the active color for all 'accent' classes inside the page.
           "--accent":
             setupMode === "role" ? "var(--accent-role)" : "var(--accent-topic)",
           "--accent-light":

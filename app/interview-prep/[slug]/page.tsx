@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, notFound } from "next/navigation";
+import { useParams, notFound, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
@@ -18,6 +18,7 @@ import { INTERVIEW_DATA } from "@/lib/mock-data";
 export default function InterviewDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const router = useRouter();
 
   // --- 1. ALL HOOKS MUST BE AT THE TOP LEVEL ---
   const [openQuestionId, setOpenQuestionId] = useState<string | null>(null);
@@ -72,12 +73,16 @@ export default function InterviewDetailPage() {
   };
 
   return (
-    <main 
+    <main
       className="min-h-screen bg-background text-foreground pb-32"
-      style={{
-        '--accent': isRole ? 'var(--accent-role)' : 'var(--accent-topic)',
-        '--accent-light': isRole ? 'var(--accent-role-light)' : 'var(--accent-topic-light)',
-      } as React.CSSProperties}
+      style={
+        {
+          "--accent": isRole ? "var(--accent-role)" : "var(--accent-topic)",
+          "--accent-light": isRole
+            ? "var(--accent-role-light)"
+            : "var(--accent-topic-light)",
+        } as React.CSSProperties
+      }
     >
       <div className="mx-auto max-w-4xl px-6 pt-32">
         {/* --- Breadcrumb Back Button --- */}
@@ -120,15 +125,16 @@ export default function InterviewDetailPage() {
           </p>
 
           <div className="mt-12 relative group">
-            <Link href={`/interview?slug=${data.slug}`}>
-              <button
-                className="cursor-start relative flex items-center gap-3 rounded-full bg-foreground px-10 py-5 font-heading text-sm font-medium uppercase tracking-wider text-background shadow-sm transition-transform hover:scale-[1.02] active:scale-95 hover:shadow-md"
-              >
-                <Sparkles className="h-4 w-4 text-accent" />
-                Initiate Practice Module
-                <Play className="h-4 w-4 fill-accent text-accent ml-1" />
-              </button>
-            </Link>
+            <button
+              onClick={() =>
+                router.push(`/interview?slug=${data.slug}&sid=${Date.now()}`)
+              }
+              className="cursor-start relative flex items-center gap-3 rounded-full bg-foreground px-10 py-5 font-heading text-sm font-medium uppercase tracking-wider text-background shadow-sm transition-transform hover:scale-[1.02] active:scale-95 hover:shadow-md"
+            >
+              <Sparkles className="h-4 w-4 text-accent" />
+              Initiate Practice Module
+              <Play className="h-4 w-4 fill-accent text-accent ml-1" />
+            </button>
           </div>
         </motion.div>
 
@@ -183,9 +189,7 @@ export default function InterviewDetailPage() {
                       >
                         <div className="border-t border-divider p-6 pt-4">
                           <div className="flex items-start gap-4 rounded-xl bg-accent-light p-6 border border-accent/20">
-                            <Lightbulb
-                              className="h-6 w-6 text-accent shrink-0 mt-1 stroke-[1.5]"
-                            />
+                            <Lightbulb className="h-6 w-6 text-accent shrink-0 mt-1 stroke-[1.5]" />
                             <div>
                               <h4 className="font-heading text-xs font-medium uppercase tracking-[0.2em] text-accent mb-3">
                                 Approach Strategy

@@ -23,16 +23,6 @@ import { Typewriter } from "@/components/ui/Typewriter";
 type PermissionState = "idle" | "requesting" | "granted" | "denied";
 type AIState = "listening" | "processing" | "speaking";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const shuffleQuestions = (pool: any[], count: number) => {
-  const shuffled = [...pool];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled.slice(0, count);
-};
-
 function InterviewContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -43,6 +33,7 @@ function InterviewContent() {
   const level = searchParams.get("lv") || "Mid-Level";
   const dur = searchParams.get("dur") || "30m";
   const qParam = searchParams.get("q") || "3";
+  const sid = searchParams.get("sid") || "default";
 
   const [sessionPhase, setSessionPhase] = useState<"setup" | "active">("setup");
   const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
@@ -63,28 +54,50 @@ function InterviewContent() {
   const [screenPerm, setScreenPerm] = useState<PermissionState>("idle");
   const [isFinished, setIsFinished] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const transcriptEndRef = useRef<HTMLDivElement>(null);
+  // ─── sessionConversation as proper state, reset via useEffect ───────────────
+  // Previously used a lazy useState initializer which only runs once on mount,
+  // causing stale questions if slug/mode/dur/q params change between sessions.
+  const [sessionConversation, setSessionConversation] = useState<ConversationTurn[]>([]);
 
   const data = INTERVIEW_DATA.find((item) => item.slug === slug);
 
   // 2. Calculate Question Count based on Duration
-  const calculateTargetCount = () => {
-    if (mode === "topic") return parseInt(qParam);
-
-    switch (dur) {
-      case "15m":
-        return 2;
-      case "30m":
-        return 3;
-      case "45m":
-        return 4;
-      case "60m":
-        return 5;
-      default:
-        return 3;
+  const calculateTargetCount = (currentDur: string, currentMode: string, currentQ: string) => {
+    if (currentMode === "topic") return parseInt(currentQ);
+    switch (currentDur) {
+      case "15m": return 2;
+      case "30m": return 3;
+      case "45m": return 4;
+      case "60m": return 5;
+      default:    return 3;
     }
   };
+
+  // ─── Rebuild and re-shuffle session when any key param changes ───────────────
+  // This replaces the old lazy useState(() => ...) initializer. Without this,
+  // navigating to a new interview or changing dur/q reuses the old stale question set.
+  useEffect(() => {
+    if (!data) return;
+    const targetCount = calculateTargetCount(dur, mode, qParam);
+    const pool = [...data.mockConversation];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    setSessionConversation(pool.slice(0, Math.min(targetCount, pool.length)));
+
+    // Also reset all session progress state so the new params start fresh
+    setCurrentTurnIndex(0);
+    setSessionPhase("setup");
+    setTranscript([]);
+    setIsFinished(false);
+    setIsThinking(false);
+    setHasUsedPauseThisTurn(false);
+    setThinkTimeLeft(20);
+    setElapsedTime(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, mode, dur, qParam, sid]);
+  // ─────────────────────────────────────────────────────────────────────────────
 
   // 3. Calculate Total Seconds for the session
   const totalSeconds = useMemo(() => {
@@ -120,10 +133,8 @@ function InterviewContent() {
 
     const interval = setInterval(() => {
       setThinkTimeLeft((prev) => {
-        // When we hit 1, the next tick is 0. Time to stop!
         if (prev <= 1) {
           clearInterval(interval);
-          // Use setTimeout to safely trigger state updates outside the render loop
           setTimeout(() => {
             setIsThinking(false);
             setHasUsedPauseThisTurn(true);
@@ -146,21 +157,6 @@ function InterviewContent() {
 
   const remainingTime = Math.max(0, totalSeconds - elapsedTime);
 
-  // 8. LAZY INITIALIZER: Randomize and Slice
-  const [sessionConversation] = useState<ConversationTurn[]>(() => {
-    if (!data) return [];
-
-    const targetCount = calculateTargetCount();
-    const pool = [...data.mockConversation];
-
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-
-    return pool.slice(0, Math.min(targetCount, pool.length));
-  });
-
   // Track the original indices to pass to the feedback page
   const sessionIndices = useMemo(() => {
     if (!data) return "";
@@ -168,6 +164,9 @@ function InterviewContent() {
       .map((q) => data.mockConversation.findIndex((item) => item.id === q.id))
       .join(",");
   }, [sessionConversation, data]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (sessionPhase !== "active" || !data) return;
@@ -207,15 +206,13 @@ function InterviewContent() {
   const finishSession = () => {
     setIsFinished(true);
     setTimeout(() => {
-      // Pass everything to the feedback page so the report is customized
       router.push(
-        `/feedback?slug=${slug}&indices=${sessionIndices}&lv=${level}&mode=${mode}`,
+        `/feedback?slug=${slug}&indices=${sessionIndices}&lv=${level}&mode=${mode}&sid=${sid}`,
       );
     }, 4000);
   };
 
   const handleNextTurn = () => {
-    // 1. Force reset all Pause/Think states for the new turn
     setIsThinking(false);
     setHasUsedPauseThisTurn(false);
     setThinkTimeLeft(20);
@@ -250,14 +247,12 @@ function InterviewContent() {
   };
 
   const togglePause = () => {
-    if (hasUsedPauseThisTurn && !isThinking) return; // Locked out if already used
+    if (hasUsedPauseThisTurn && !isThinking) return;
 
     if (!isThinking) {
-      // Start pausing
       setIsThinking(true);
       setThinkTimeLeft(20);
     } else {
-      // Resuming early
       setIsThinking(false);
       setHasUsedPauseThisTurn(true);
     }
@@ -386,7 +381,7 @@ function InterviewContent() {
             Session Complete.
           </h2>
           <p className="mt-6 text-xl text-muted font-medium italic">
-            &quot;Great job. You’ve completed the {data.title} simulation.&quot;
+            &quot;Great job. You&apos;ve completed the {data.title} simulation.&quot;
           </p>
           <div className="mt-16 flex flex-col items-center gap-6 w-full max-w-xs">
             <div className="flex items-center gap-3 px-6 py-3 rounded-full border border-divider bg-background-alt">
@@ -427,20 +422,16 @@ function InterviewContent() {
           {/* HEADER CONTROLS */}
           <header className="flex items-center justify-between">
             <div className="flex items-center gap-4 rounded-full border border-divider bg-background-alt/80 px-6 py-3 backdrop-blur-md shadow-sm">
-              {/* Countdown Pulse */}
               <div
                 className={`h-2.5 w-2.5 rounded-full ${remainingTime < 60 ? "bg-red-500 animate-ping" : "bg-[color:var(--accent)] animate-pulse"}`}
               />
 
               <div className="flex items-baseline gap-1.5 font-mono">
-                {/* Remaining Time */}
                 <span
                   className={`text-sm font-medium tracking-widest ${remainingTime < 60 ? "text-red-500" : "text-foreground"}`}
                 >
                   {formatTime(remainingTime)}
                 </span>
-
-                {/* Separator / Total Time */}
                 <span className="text-xs text-muted/50">/</span>
                 <span className="text-xs font-medium text-muted">
                   {formatTime(totalSeconds)}
@@ -449,7 +440,6 @@ function InterviewContent() {
 
               <span className="h-4 w-px bg-divider mx-2" />
 
-              {/* Context Label */}
               <div className="flex flex-col">
                 <span className="font-heading text-[9px] font-medium uppercase tracking-widest text-muted leading-none mb-1">
                   {mode === "role" ? "Session Duration" : "Estimated Time"}
@@ -482,19 +472,14 @@ function InterviewContent() {
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${isActive ? "bg-[color:var(--accent)] w-full" : isPast ? "bg-[color:var(--accent-light)] w-full" : "w-0"}`}
                   />
-
-                  {/* Tooltip */}
                   <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-48 invisible opacity-0 translate-y-2 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 z-50">
                     <div className="rounded-xl border border-divider bg-background p-3 shadow-lg text-center relative">
                       <span className="block font-heading text-[9px] font-medium uppercase tracking-widest text-[color:var(--accent)] mb-1">
-                        {mode === "topic"
-                          ? "Topic Question"
-                          : `Turn ${idx + 1}`}
+                        {mode === "topic" ? "Topic Question" : `Turn ${idx + 1}`}
                       </span>
                       <p className="text-xs text-foreground/80 line-clamp-3">
                         {turn.aiQuestion}
                       </p>
-                      {/* Tooltip Arrow */}
                       <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-b border-r border-divider bg-background" />
                     </div>
                   </div>
@@ -503,6 +488,7 @@ function InterviewContent() {
             })}
           </div>
         </div>
+
         {/* AI ORB VISUALIZATION */}
         <div className="flex flex-col items-center justify-center">
           <motion.div
