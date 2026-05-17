@@ -178,6 +178,25 @@ function InterviewContent() {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [transcript]);
 
+  // --- AUTOMATIC TURN-TAKING EFFECT ---
+  // Calculates how long the Typewriter will take to type the AI's question,
+  // then automatically switches the AI state from "speaking" to "listening".
+  useEffect(() => {
+    const lastMsg = transcript[transcript.length - 1];
+    if (lastMsg && lastMsg.speaker === "ai") {
+      setAiState("speaking");
+      
+      // Estimate typing time: ~30ms per character + 800ms buffer at the end
+      const typingDuration = lastMsg.text.length * 30 + 800;
+      
+      const timer = setTimeout(() => {
+        setAiState("listening");
+      }, typingDuration);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [transcript]);
+
   if (!data)
     return (
       <div className="text-foreground bg-background text-center p-20 min-h-screen">
@@ -219,19 +238,19 @@ function InterviewContent() {
 
     const currentTurn = sessionConversation[currentTurnIndex];
 
-    setAiState("listening");
+    // 1. Lock the UI into processing mode and append user's mock answer
+    setAiState("processing");
     setTranscript((prev) => [
       ...prev,
       { speaker: "user", text: currentTurn.userMockAnswer, id: Date.now() },
     ]);
 
-    setTimeout(() => setAiState("processing"), 1200);
-
+    // 2. Simulate AI processing time, then push the next question
     setTimeout(() => {
       const nextIndex = currentTurnIndex + 1;
       if (nextIndex < sessionConversation.length) {
         setCurrentTurnIndex(nextIndex);
-        setAiState("speaking");
+        // Appending an "ai" message triggers the useEffect above to set state to "speaking"
         setTranscript((prev) => [
           ...prev,
           {
@@ -243,7 +262,38 @@ function InterviewContent() {
       } else {
         finishSession();
       }
-    }, 3000);
+    }, 2500); // 2.5 seconds of "processing"
+  };
+
+  const handleSkip = () => {
+    // 1. Reset all pause/think states
+    setIsThinking(false);
+    setHasUsedPauseThisTurn(false);
+    setThinkTimeLeft(20);
+    
+    // 2. Lock the UI
+    setAiState("processing");
+    
+    // 3. Evaluate context: Next question OR Finish
+    setTimeout(() => {
+      const nextIndex = currentTurnIndex + 1;
+      
+      if (nextIndex < sessionConversation.length) {
+        // We have more questions -> Jump to next turn
+        setCurrentTurnIndex(nextIndex);
+        setTranscript((prev) => [
+          ...prev,
+          {
+            speaker: "ai",
+            text: sessionConversation[nextIndex].aiQuestion,
+            id: Date.now(),
+          },
+        ]);
+      } else {
+        // We are on the final question -> Trigger the finish sequence
+        finishSession();
+      }
+    }, 1000); // 1 second buffer so the UI doesn't jump instantly
   };
 
   const togglePause = () => {
@@ -256,10 +306,6 @@ function InterviewContent() {
       setIsThinking(false);
       setHasUsedPauseThisTurn(true);
     }
-  };
-
-  const handleSkipToFinish = () => {
-    finishSession();
   };
 
   const allGranted =
@@ -539,15 +585,17 @@ function InterviewContent() {
               <Mic className="h-5 w-5" />
             )}
           </button>
+          
           <button
             onClick={togglePause}
-            disabled={hasUsedPauseThisTurn && !isThinking}
+            // Disabled if AI isn't listening, OR if user already used their pause
+            disabled={(hasUsedPauseThisTurn && !isThinking) || aiState !== "listening"}
             className={`cursor-think flex items-center justify-center gap-3 px-8 py-4 rounded-full border transition-all duration-300 ${
               isThinking
                 ? thinkTimeLeft <= 5
                   ? "border-red-500 bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse"
                   : "border-muted bg-muted text-background shadow-md"
-                : hasUsedPauseThisTurn
+                : (hasUsedPauseThisTurn || aiState !== "listening")
                   ? "border-divider bg-background-alt text-muted/50 cursor-not-allowed"
                   : "border-divider bg-background text-foreground hover:bg-background-alt"
             }`}
@@ -563,18 +611,30 @@ function InterviewContent() {
                   : "Pause"}
             </span>
           </button>
+
           <button
             onClick={handleNextTurn}
-            disabled={isThinking}
-            className={`cursor-answer px-10 py-4 rounded-full font-heading text-sm font-medium uppercase tracking-wider text-background transition-all bg-[color:var(--accent)] hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
+            // Cannot answer while AI is speaking, processing, or while user is paused
+            disabled={isThinking || aiState !== "listening"}
+            className={`cursor-answer w-[220px] py-4 rounded-full font-heading text-sm font-medium uppercase tracking-wider text-background transition-all bg-[color:var(--accent)] hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
           >
-            Complete Answer
+            {/* Dynamic button text acts as a status indicator */}
+            {aiState === "speaking"
+              ? "AI Speaking..."
+              : aiState === "processing"
+                ? "Processing..."
+                : "Complete Answer"}
           </button>
+
           <button
-            onClick={handleSkipToFinish}
-            className="cursor-skip flex items-center gap-2 font-heading text-xs font-medium uppercase tracking-widest text-muted hover:text-foreground transition-all ml-4"
+            onClick={handleSkip}
+            // Cannot skip while AI is currently compiling the next turn
+            disabled={aiState === "processing"}
+            className="cursor-skip flex items-center gap-2 font-heading text-xs font-medium uppercase tracking-widest text-muted hover:text-foreground transition-all ml-4 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            Skip <FastForward className="h-4 w-4" />
+            {/* Dynamically change text if it's the last question */}
+            {currentTurnIndex === sessionConversation.length - 1 ? "Skip & Finish" : "Skip"} 
+            <FastForward className="h-4 w-4" />
           </button>
         </div>
       </div>
